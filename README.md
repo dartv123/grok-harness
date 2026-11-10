@@ -1,62 +1,65 @@
 # anima_cloud
 
-A single-file Python 3.10+ tool that uses only the standard library. It submits a built-in Anima workflow to Comfy Cloud, downloads the image, and prints a short `key: value` result block.
+Generates anime images with Anima on Comfy Cloud. One command in, one image path out.
 
-## Setup in the sandbox (each conversation)
+**Treat this tool as a black box.** Don't read, unpack, modify or debug `anima_cloud.py` unless the user explicitly asks you to. Run the commands below and act on the output.
+
+## Setup (once per conversation)
 
 ```bash
 curl -fsSL -o /home/workdir/anima_cloud.py https://raw.githubusercontent.com/dartv123/grok-harness/main/anima_cloud.py
 ```
 
-Provide the API key in one of these places, checked in this order:
+The user tells you how the API key is provided. The tool reads it from `COMFY_API_KEY` or `COMFYUI_API_KEY`, from `--key-file PATH`, or from `/home/workdir/.grok/secrets/comfy_api_key`. Never print or echo the key.
 
-1. `COMFY_API_KEY` env var
-2. `COMFYUI_API_KEY` env var
-3. `--key-file PATH`
-4. `/home/workdir/.grok/secrets/comfy_api_key`
-
-## Usage
+## Generate
 
 ```bash
-python3 /home/workdir/anima_cloud.py --prompt "1girl, long hair, ..." [--seed 42] \
-  [--width 832 --height 1216] [--batch 1] [--lora "name.safetensors:0.8"] \
-  [--negative "..."] [--out /workspace/artifacts/anima]
+python3 /home/workdir/anima_cloud.py --prompt "<tags>"
 ```
 
-The tool waits up to `--wait` seconds (default 25, which fits the 30 s tool-call limit). If the job hasn't finished by then, it prints `status: pending` and a `next:` command. Run that command to keep waiting; it never resubmits the job.
+- **The prompt is used exactly as you write it.** No quality tags or negative prompt are added. Write the full prompt yourself, for example `masterpiece, best quality, 1girl, long hair, ...` if you want quality tags.
+- **Run it as a normal command.** It returns within about 30 seconds.
 
-| Command | Purpose |
+Optional flags:
+
+| Flag | Default | Meaning |
+|---|---|---|
+| `--negative "<tags>"` | empty | Negative prompt |
+| `--width W --height H` | 832 × 1216 | Size. Multiples of 16, between 256 and 4096 |
+| `--seed N` | random | The seed is always reported, so a result can be reproduced |
+| `--batch N` | 1 | 1–8 images |
+| `--lora "file.safetensors:0.8"` | none | Extra LoRA; repeatable |
+| `--out DIR` | `/workspace/artifacts/anima` | Where images are saved |
+
+## Read the result
+
+Every run prints a few `key: value` lines and exits with a code. For example:
+
+```
+status: completed
+path: /workspace/artifacts/anima/anima_base_261110-221500_s42.png
+seed: 42
+prompt_id: 1234abcd-...
+```
+
+| Exit | `status` | What to do |
+|---|---|---|
+| 0 | `completed` | Show the image at `path` (or each one under `paths:`) to the user. |
+| 4 | `pending` | Still generating. Run the exact command on the `next:` line. Repeat until it finishes. This never starts a new job. |
+| 1 | `error` / `failed` / `cancelled` | Tell the user the `error:` line. Don't retry unless they ask. |
+| 2 | `error` / `stalled` | Network or Cloud problem. Tell the user. You may run the `--resume <prompt_id>` command once. |
+| 3 | `error` | Key, credits, auth or a bad flag. Tell the user the `error:` line. Don't retry. |
+
+**Rules**
+- Never resubmit a prompt to work around a pending, stalled or failed job. Each submission costs Cloud credits.
+- Only resume or cancel a job with the `prompt_id` the tool printed.
+
+## Other commands
+
+| Command | Use |
 |---|---|
-| `--resume ID [--wait 25]` | Keep waiting for an existing job, then download it |
-| `--cancel ID` | Remove a job from the Cloud queue |
-| `--dry-run` | Print the API JSON; nothing is submitted and no key is needed |
-| `--list-variants` | Show the built-in variants |
-| `--list-models unet\|lora\|clip\|vae\|ckpt [--filter s]` | List model files on Cloud |
-| `--hires-lora auto\|on\|off` | Control the aesthetic-boost LoRA (auto: on at ≥ 2 MP) |
-| `--steps N`, `--cfg X` | Override the variant's sampler settings |
-
-**Exit codes**
-
-| Code | Meaning |
-|---|---|
-| 0 | Completed |
-| 1 | Job failed, or the workflow was rejected |
-| 2 | Network, server or stall error |
-| 3 | Usage, key, auth or credits error |
-| 4 | Still pending |
-
-## Built-in workflow (`base`)
-
-- **Diffusion model:** `divingAnima_v90.safetensors`
-- **Text encoder:** `qwen_3_06b_base`
-- **VAE:** `qwen_image_vae`
-- **Sampler:** 20 steps, CFG 2, `er_sde`/`simple`
-
-The graph uses only core nodes. The original graph used custom nodes to switch the aesthetic LoRA on at ≥ 2 MP; that logic now lives in Python. To add variants (turbo, base+turbo), edit `VARIANTS` at the top of the script.
-
-## API notes (Comfy Cloud)
-
-- Submit with `POST /api/prompt`, using an `X-API-Key` header.
-- Poll `GET /api/job/{id}/status`, which returns `pending`, `in_progress`, `completed`, `error` or `cancelled`.
-- Once the job is finished, `GET /api/jobs/{id}` returns its outputs.
-- `GET /api/view` returns a 302 redirect to a signed Google Cloud Storage URL. The tool fetches that URL without the API key.
+| `--resume <prompt_id>` | Keep waiting for a job and download it |
+| `--cancel <prompt_id>` | Remove a job from the Cloud queue |
+| `--list-models lora --filter <text>` | Find exact LoRA filenames for `--lora` (also works with `unet`, `clip`, `vae`) |
+| `--dry-run` | Print the request without submitting. Only use it when the user asks |
