@@ -306,6 +306,7 @@ def finish(api, pid, status, st, out_dir, local_prefix):
     images = collect_images(detail.get("outputs"))
     if not images:
         raise Fail("error", "job completed but returned no images", 1, prompt_id=pid)
+    out_dir = os.path.abspath(out_dir)
     os.makedirs(out_dir, exist_ok=True)
     paths = []
     for i, img in enumerate(images):
@@ -399,11 +400,8 @@ def validate(args, parser):
 
 def list_models(api, kind, flt):
     node, field = LIST_MODEL_KINDS[kind]
-    info = api.json("GET", f"/api/object_info/{node}")
+    info = api.json("GET", "/api/object_info")  # Cloud has no per-node /api/object_info/{node}
     spec = (info.get(node) or {}).get("input", {}).get("required", {}).get(field)
-    if spec is None:  # some servers ignore the per-node path
-        info = api.json("GET", "/api/object_info")
-        spec = (info.get(node) or {}).get("input", {}).get("required", {}).get(field)
     names = []
     if isinstance(spec, list) and spec:
         if isinstance(spec[0], list):
