@@ -1,0 +1,229 @@
+{
+  "46": {
+    "inputs": {
+      "filename_prefix": "Anima_20261109_HH1124",
+      "images": [
+        "97_87",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "97_730": {
+    "inputs": {
+      "int_value": 1
+    },
+    "class_type": "FL_IntToFloat",
+    "_meta": {
+      "title": "Image size in Megapixel"
+    }
+  },
+  "97_85": {
+    "inputs": {
+      "clip_name": "qwen_3_06b_base.safetensors",
+      "type": "stable_diffusion",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "97_86": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "97_92": {
+    "inputs": {
+      "unet_name": "divingAnima_v90.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "97_726": {
+    "inputs": {
+      "expression": "a >= 2",
+      "variables.a": [
+        "97_730",
+        0
+      ]
+    },
+    "class_type": "SimpleCalculatorKJ",
+    "_meta": {
+      "title": "same or large than 2 MP"
+    }
+  },
+  "97_93": {
+    "inputs": {
+      "aspect_ratio": "9:16 (Portrait Widescreen)",
+      "megapixels": [
+        "97_730",
+        0
+      ],
+      "multiple": 8
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "97_94": {
+    "inputs": {
+      "lora_name": "anima-highres-aesthetic-boost.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "97_92",
+        0
+      ],
+      "clip": [
+        "97_85",
+        0
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA (Model and CLIP)"
+    }
+  },
+  "97_88": {
+    "inputs": {
+      "width": [
+        "97_93",
+        0
+      ],
+      "height": [
+        "97_93",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "97_95": {
+    "inputs": {
+      "switch": [
+        "97_726",
+        2
+      ],
+      "on_false": [
+        "97_92",
+        0
+      ],
+      "on_true": [
+        "97_94",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch"
+    }
+  },
+  "97_96": {
+    "inputs": {
+      "switch": [
+        "97_726",
+        2
+      ],
+      "on_false": [
+        "97_85",
+        0
+      ],
+      "on_true": [
+        "97_94",
+        1
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch"
+    }
+  },
+  "97_89": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "97_96",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "97_91": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "97_96",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "97_90": {
+    "inputs": {
+      "seed": 3707418454814631,
+      "steps": 20,
+      "cfg": 2,
+      "sampler_name": "er_sde",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "97_95",
+        0
+      ],
+      "positive": [
+        "97_91",
+        0
+      ],
+      "negative": [
+        "97_89",
+        0
+      ],
+      "latent_image": [
+        "97_88",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "97_87": {
+    "inputs": {
+      "samples": [
+        "97_90",
+        0
+      ],
+      "vae": [
+        "97_86",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  }
+}
