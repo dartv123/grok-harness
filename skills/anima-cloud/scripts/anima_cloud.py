@@ -472,7 +472,10 @@ def main(argv=None):
     except Fail as e:
         if pid and "prompt_id" not in e.extra:
             e.extra["prompt_id"] = pid
-        emit(status=e.status, error=e.error, **e.extra)
+        if e.status == "pending":
+            emit(status=e.status, detail=e.error, **e.extra)
+        else:
+            emit(status=e.status, error=e.error, **e.extra)
         return e.code
     except KeyboardInterrupt:
         emit(status="interrupted", error="local wait aborted; job may still run on Cloud",
