@@ -18,7 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-VERSION = "0.1.0"
+VERSION = "1.0.0"
 DEFAULT_BASE_URL = "https://cloud.comfy.org"
 DEFAULT_OUT = "/workspace/artifacts/anima"
 KEY_ENV_VARS = ("COMFY_API_KEY", "COMFYUI_API_KEY")
