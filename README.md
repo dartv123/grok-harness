@@ -19,6 +19,18 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 |---|---|
 | `anima-cloud` | `base` variant (divingAnima v9.0, 20 steps, CFG 2). `--ckpt` swaps in any other Anima model / checkpoint on the account |
 
+### Models known to work with `--ckpt`
+
+| File | Loader | Notes |
+|---|---|---|
+| `silvermoonmixAnimaEvolved_v23.safetensors` | `UNETLoader` | Silvermoon Mix Anima Evolved v2.3 |
+| `divingAnima_v90.safetensors` | `UNETLoader` | variant default |
+| `real-dream-v5-anima-bf16.safetensors` | `UNETLoader` | photoreal-leaning Anima build |
+
+Any other diffusion model or checkpoint on the account also works, including partial names — check with `--list-models model --filter <text>`. Sampler settings stay the variant's; pass `--steps` / `--cfg` if the model wants different ones.
+
+Cloud's `/api/object_info` does not list every imported model (the three above are missing from it), so `--ckpt` submits an unknown name as-is and lets the job decide; `--loader unet|ckpt` forces the loader if `auto` guesses wrong.
+
 ## Adding a workflow
 
 1. **Script:** create `skills/<name>/scripts/<tool>.py`. Keep it to one file using only the Python 3.10 standard library, so the agent can run it straight after download. Follow the output contract in AGENTS.md: `key: value` lines, exit codes 0–4, a `next:` line for pending jobs, and no automatic resubmission.

@@ -356,6 +356,9 @@ def build_parser():
     p.add_argument("--ckpt", "--model", dest="ckpt", metavar="NAME", default=None,
                    help="override the model file: any diffusion model / checkpoint on Cloud; "
                         "exact name or a unique substring")
+    p.add_argument("--loader", choices=("auto", "unet", "ckpt"), default="auto",
+                   help="loader for --ckpt: auto = pick from the catalog, unet = UNETLoader, "
+                        "ckpt = CheckpointLoaderSimple (default auto)")
     p.add_argument("--width", type=int, default=832)
     p.add_argument("--height", type=int, default=1216)
     p.add_argument("--seed", type=int, default=None, help="default: random")
@@ -445,11 +448,17 @@ def model_files(api):
 
 
 def resolve_model(api, want):
-    """Map a full or partial model filename to (exact_name, loader_kind)."""
+    """Map a full or partial model filename to (exact_name, loader_kind|None).
+
+    kind is None when the file is not in the catalog: the name is passed through
+    unchanged, because Cloud does not enumerate every import (private Anima
+    builds run fine while missing from object_info) and its own validation is
+    the real check.
+    """
     pairs = model_files(api)
-    if not pairs:  # no catalog: submit the name unchanged and let Cloud reject it
-        return want.strip(), "unet"
     want = want.strip()
+    if not pairs:
+        return want, None
     base = os.path.basename(want)
     stem = os.path.splitext(base)[0].lower()
     for pred in (lambda n: n == want,
@@ -463,8 +472,8 @@ def resolve_model(api, want):
     if len(hits) == 1:
         return hits[0]
     if not hits:
-        raise Fail("error", f"model not on Cloud: {want}", 3,
-                   hint="--list-models model --filter <text>")
+        # Unlisted: submit the exact filename (Cloud needs the extension).
+        return (want if os.path.splitext(base)[1] else want + ".safetensors"), None
     raise Fail("error", f"ambiguous model '{want}': "
                         + ", ".join(n for n, _ in hits[:4]) + (" ..." if len(hits) > 4 else ""), 3)
 
@@ -498,7 +507,13 @@ def main(argv=None):
             validate(args, parser)
             if args.ckpt:  # needs the catalog, so needs key + network even for --dry-run
                 api = Api(args.base_url, load_key(args.key_file))
-                args.model_name, args.model_loader = resolve_model(api, args.ckpt)
+                name, kind = resolve_model(api, args.ckpt)
+                args.model_name = name
+                args.model_loader = args.loader if args.loader != "auto" else (kind or "unet")
+                if kind is None:
+                    print(f"warning: {name} is not in the /api/object_info catalog "
+                          f"(Cloud does not list every import); submitting as-is",
+                          file=sys.stderr if args.dry_run else sys.stdout)
                 set_prefix(args)
             graph = build_graph(args)
             if args.dry_run:

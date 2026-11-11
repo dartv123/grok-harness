@@ -22,6 +22,7 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py --p
 | `--width W --height H` | 832 × 1216 | Multiples of 16, between 256 and 4096. Examples: 1216×832 landscape, 1024×1024 square |
 | `--seed N` | random | Always reported; reuse it to reproduce or tweak an image |
 | `--ckpt NAME` | variant's model | Override the model file (`--model` is an alias). See below |
+| `--loader KIND` | `auto` | Loader for `--ckpt`: `auto` \| `unet` (UNETLoader) \| `ckpt` (CheckpointLoaderSimple) |
 | `--batch N` | 1 | 1–8 images in one job |
 | `--lora "file.safetensors:0.8"` | none | Extra LoRA. Repeatable; strength defaults to 1.0 |
 | `--out DIR` | `/workspace/artifacts/anima` | Output folder |
@@ -37,7 +38,9 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py \
   --prompt "<tags>" --ckpt silvermoonmixAnimaEvolved_v23.safetensors
 ```
 
-- **Partial names are fine.** An exact filename wins; otherwise basename, then a unique substring. Ambiguous or unknown names exit 3 with the candidates, and nothing is submitted.
+- **Partial names are fine.** An exact filename wins; otherwise basename, then a unique substring. An ambiguous substring exits 3 with the candidates, and nothing is submitted.
+- **A name the catalog does not know is still submitted**, with a `warning:` line. Cloud does not enumerate every import — private Anima builds run fine while missing from `/api/object_info` — so Cloud's own validation is the check. If the file really is absent the job fails with a `value_not_in_list` node error (exit 1).
+- `--loader unet|ckpt` forces the loader instead of picking it from the catalog (default `auto`: diffusion model where listed, `UNETLoader` when unlisted).
 - `--ckpt` **queries `/api/object_info` first**, so it needs the key (and network) even with `--dry-run`.
 - Sampler settings stay the variant's (`--steps` / `--cfg` override them). The CLIP and VAE stack is unchanged.
 - The result block gains `model:` and `loader:` lines, and the filename gets a short model tag.
