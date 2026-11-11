@@ -47,8 +47,17 @@ class Api(BaseHTTPRequestHandler):
                 "outputs": {"save": {"images": imgs}, "preview": {"images": [{"filename": "tmp.png", "type": "temp"}]}}})
         if u.path == "/api/view":
             return self.send(302, None, {"Location": f"http://127.0.0.1:{STORE_PORT}/bucket/{q['filename'][0]}?sig=abc"})
-        if u.path.startswith("/api/object_info/"):
-            return self.send(200, {"UNETLoader": {"input": {"required": {"unet_name": ["COMBO", {"options": [f"model_{i}.safetensors" for i in range(40)] + ["divingAnima_v90.safetensors"]}]}}}})
+        if u.path == "/api/object_info" or u.path.startswith("/api/object_info/"):
+            return self.send(200, {
+                "UNETLoader": {"input": {"required": {"unet_name": ["COMBO", {"options":
+                    [f"model_{i}.safetensors" for i in range(40)] + [
+                        "divingAnima_v90.safetensors",
+                        "silvermoonmixAnimaEvolved_v23.safetensors"]}]}}},
+                "CheckpointLoaderSimple": {"input": {"required": {"ckpt_name": ["COMBO", {"options":
+                    ["flux1-dev-fp8.safetensors", "sd_xl_base_1.0.safetensors"]}]}}},
+                "LoraLoader": {"input": {"required": {"lora_name": ["COMBO", {"options":
+                    ["anima-highres-aesthetic-boost.safetensors", "anima_turbo.safetensors"]}]}}},
+            })
         self.send(404, {"code": "nf", "message": "nf"})
 class Store(BaseHTTPRequestHandler):
     def log_message(self, *a): pass

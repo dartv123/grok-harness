@@ -17,7 +17,7 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 
 | Skill | Status |
 |---|---|
-| `anima-cloud` | `base` variant (divingAnima v9.0, 20 steps, CFG 2). Turbo variants not added yet |
+| `anima-cloud` | `base` variant (divingAnima v9.0, 20 steps, CFG 2). `--ckpt` swaps in any other Anima model / checkpoint on the account |
 
 ## Adding a workflow
 

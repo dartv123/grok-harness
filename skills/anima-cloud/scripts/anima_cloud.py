@@ -18,7 +18,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 DEFAULT_BASE_URL = "https://cloud.comfy.org"
 DEFAULT_OUT = "/workspace/artifacts/anima"
 KEY_ENV_VARS = ("COMFY_API_KEY", "COMFYUI_API_KEY")
@@ -59,6 +59,9 @@ LIST_MODEL_KINDS = {
     "vae": ("VAELoader", "vae_name"),
     "ckpt": ("CheckpointLoaderSimple", "ckpt_name"),
 }
+# `model` is not a loader kind: it lists both diffusion models (unet) and checkpoints (ckpt).
+MODEL_KINDS = ("unet", "ckpt")
+LIST_KINDS = {**LIST_MODEL_KINDS, "model": None}
 
 
 class Fail(Exception):
@@ -84,8 +87,13 @@ def short(text, limit=240):
 def build_graph(args):
     v = VARIANTS[args.variant]
     g = {}
-    g["unet"] = {"class_type": "UNETLoader",
-                 "inputs": {"unet_name": v["unet"], "weight_dtype": "default"}}
+    name = getattr(args, "model_name", None) or v["unet"]
+    if getattr(args, "model_loader", "unet") == "ckpt":
+        g["unet"] = {"class_type": "CheckpointLoaderSimple",
+                     "inputs": {"ckpt_name": name}}
+    else:
+        g["unet"] = {"class_type": "UNETLoader",
+                     "inputs": {"unet_name": name, "weight_dtype": "default"}}
     g["clip"] = {"class_type": "CLIPLoader",
                  "inputs": {"clip_name": TEXT_ENCODER, "type": "stable_diffusion",
                             "device": "default"}}
@@ -345,6 +353,9 @@ def build_parser():
     p.add_argument("--negative", default=None, help="negative prompt (default: baked)")
     p.add_argument("--no-quality", action="store_true", help="skip the baked quality prefix")
     p.add_argument("--variant", default=DEFAULT_VARIANT, choices=sorted(VARIANTS))
+    p.add_argument("--ckpt", "--model", dest="ckpt", metavar="NAME", default=None,
+                   help="override the model file: any diffusion model / checkpoint on Cloud; "
+                        "exact name or a unique substring")
     p.add_argument("--width", type=int, default=832)
     p.add_argument("--height", type=int, default=1216)
     p.add_argument("--seed", type=int, default=None, help="default: random")
@@ -367,8 +378,9 @@ def build_parser():
     g.add_argument("--resume", metavar="PROMPT_ID", help="wait for / download an existing job")
     g.add_argument("--cancel", metavar="PROMPT_ID", help="remove a job from the queue")
     g.add_argument("--list-variants", action="store_true")
-    g.add_argument("--list-models", choices=sorted(LIST_MODEL_KINDS), metavar="KIND",
-                   help=f"list Cloud model files: {', '.join(sorted(LIST_MODEL_KINDS))}")
+    g.add_argument("--list-models", choices=sorted(LIST_KINDS), metavar="KIND",
+                   help=f"list Cloud model files: {', '.join(sorted(LIST_KINDS))} "
+                        f"('model' = diffusion models + checkpoints)")
     p.add_argument("--filter", default="", help="substring filter for --list-models")
     p.add_argument("--version", action="version", version=f"%(prog)s {VERSION}")
     return p
@@ -393,22 +405,76 @@ def validate(args, parser):
     pixels = args.width * args.height
     args.use_hires_lora = args.hires_lora == "on" or (
         args.hires_lora == "auto" and pixels >= HIRES_LORA_MIN_PIXELS)
+    set_prefix(args)
+
+
+def set_prefix(args):
+    """Filename stem: variant + a short model tag (when --ckpt) + timestamp."""
     stamp = time.strftime("%y%m%d-%H%M%S")
-    args.prefix = f"anima_{args.variant.replace('+', '-')}_{stamp}"
+    name = getattr(args, "model_name", None) or ""
+    tag = re.sub(r"[^a-z0-9]+", "-",
+                 os.path.splitext(os.path.basename(name))[0].lower()).strip("-")[:24]
+    args.prefix = f"anima_{args.variant}{'_' + tag if tag else ''}_{stamp}"
     args.local_prefix = f"{args.prefix}_s{args.seed}"
 
 
-def list_models(api, kind, flt):
+def _object_info(api):
+    return api.json("GET", "/api/object_info")  # Cloud has no per-node /api/object_info/{node}
+
+
+def names_from_info(info, kind):
     node, field = LIST_MODEL_KINDS[kind]
-    info = api.json("GET", "/api/object_info")  # Cloud has no per-node /api/object_info/{node}
     spec = (info.get(node) or {}).get("input", {}).get("required", {}).get(field)
-    names = []
     if isinstance(spec, list) and spec:
         if isinstance(spec[0], list):
-            names = spec[0]
-        elif len(spec) > 1 and isinstance(spec[1], dict):
-            names = spec[1].get("options") or []
-    names = [n for n in names if flt.lower() in str(n).lower()]
+            return [str(n) for n in spec[0]]
+        if len(spec) > 1 and isinstance(spec[1], dict):
+            return [str(n) for n in (spec[1].get("options") or [])]
+    return []
+
+
+def model_files(api):
+    """All files --ckpt can point at: [(name, loader_kind)], unet before ckpt."""
+    info = _object_info(api)
+    pairs = []
+    for kind in MODEL_KINDS:
+        for n in names_from_info(info, kind):
+            if all(n != existing for existing, _ in pairs):
+                pairs.append((n, kind))
+    return pairs
+
+
+def resolve_model(api, want):
+    """Map a full or partial model filename to (exact_name, loader_kind)."""
+    pairs = model_files(api)
+    if not pairs:  # no catalog: submit the name unchanged and let Cloud reject it
+        return want.strip(), "unet"
+    want = want.strip()
+    base = os.path.basename(want)
+    stem = os.path.splitext(base)[0].lower()
+    for pred in (lambda n: n == want,
+                 lambda n: os.path.basename(n) == base,
+                 lambda n: os.path.splitext(os.path.basename(n))[0].lower() == stem):
+        hits = [p for p in pairs if pred(p[0])]
+        if hits:  # exact is exact: same file in both loaders -> diffusion model wins
+            return hits[0]
+    needle = want.lower()
+    hits = [p for p in pairs if needle in p[0].lower()]
+    if len(hits) == 1:
+        return hits[0]
+    if not hits:
+        raise Fail("error", f"model not on Cloud: {want}", 3,
+                   hint="--list-models model --filter <text>")
+    raise Fail("error", f"ambiguous model '{want}': "
+                        + ", ".join(n for n, _ in hits[:4]) + (" ..." if len(hits) > 4 else ""), 3)
+
+
+def list_models(api, kind, flt):
+    if kind == "model":
+        names = [n for n, _ in model_files(api)]
+    else:
+        names = names_from_info(_object_info(api), kind)
+    names = [n for n in names if flt.lower() in n.lower()]
     cap = 12
     emit(kind=kind, count=len(names))
     for n in names[:cap]:
@@ -427,14 +493,19 @@ def main(argv=None):
                 print(f"{name}{' (default)' if name == DEFAULT_VARIANT else ''}: {v['desc']}")
             return 0
 
+        api = None
         if not (args.resume or args.cancel or args.list_models):
             validate(args, parser)
+            if args.ckpt:  # needs the catalog, so needs key + network even for --dry-run
+                api = Api(args.base_url, load_key(args.key_file))
+                args.model_name, args.model_loader = resolve_model(api, args.ckpt)
+                set_prefix(args)
             graph = build_graph(args)
             if args.dry_run:
                 print(json.dumps({"prompt": graph}, indent=1))
                 return 0
 
-        api = Api(args.base_url, load_key(args.key_file))
+        api = api or Api(args.base_url, load_key(args.key_file))
 
         if args.list_models:
             list_models(api, args.list_models, args.filter)
@@ -465,6 +536,8 @@ def main(argv=None):
                 print(f"  {pth}")
         if not args.resume:
             emit(variant=args.variant, size=f"{args.width}x{args.height}", seed=args.seed)
+            emit(model=getattr(args, "model_name", None) or VARIANTS[args.variant]["unet"],
+                 loader=getattr(args, "model_loader", "unet"))
         emit(prompt_id=pid)
         return 0
     except Fail as e:
