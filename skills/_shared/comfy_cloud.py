@@ -13,6 +13,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import sys
 import time
 import urllib.error
@@ -21,7 +22,9 @@ import urllib.request
 
 DEFAULT_BASE_URL = "https://cloud.comfy.org"
 KEY_ENV_VARS = ("COMFY_API_KEY", "COMFYUI_API_KEY")
-DEFAULT_KEY_FILE = "/home/workdir/.grok/secrets/comfy_api_key"
+DEFAULT_KEY_FILE = "/home/workdir/.grok/secrets/comfy_api_key"  # Grok sandbox only; optional
+OUT_ENV = "HARNESS_OUT"  # base output folder override (each tool adds its own subfolder)
+RESUME_ARGS = []  # flags a tool wants repeated on the `next:` line (set via resume_args())
 TERMINAL_OK = {"completed", "success"}
 TERMINAL_FAIL = {"error", "failed", "non_retryable_error", "lost", "cancelled"}
 
@@ -165,7 +168,41 @@ def load_key(key_file):
 
 # ---------------------------------------------------------------- job flow
 def resume_cmd():
-    return f"python3 {os.path.abspath(sys.argv[0])}"
+    extra = "".join(" " + shlex.quote(a) for a in RESUME_ARGS)
+    return f"python3 {shlex.quote(os.path.abspath(sys.argv[0]))}{extra}"
+
+
+def resume_args(out_dir=None, key_file=None):
+    """Carry --out / --key-file over to the `next:` command so a resume behaves the same."""
+    RESUME_ARGS[:] = []
+    if out_dir:
+        RESUME_ARGS.extend(["--out", out_dir])
+    if key_file:
+        RESUME_ARGS.extend(["--key-file", os.path.abspath(key_file)])
+
+
+# ---------------------------------------------------------------- output folder
+def default_out(tool):
+    """$HARNESS_OUT/<tool>, else /workspace/artifacts/<tool> (Grok sandbox), else
+    ./artifacts/<tool> under the current directory."""
+    base = os.environ.get(OUT_ENV, "").strip()
+    if base:
+        return os.path.join(os.path.abspath(base), tool)
+    if os.path.isdir("/workspace") and os.access("/workspace", os.W_OK):
+        return os.path.join("/workspace/artifacts", tool)
+    return os.path.join(os.getcwd(), "artifacts", tool)
+
+
+def ensure_out_dir(path):
+    """Create and check the output folder BEFORE submitting, so a bad --out costs no credits."""
+    path = os.path.abspath(path)
+    try:
+        os.makedirs(path, exist_ok=True)
+    except OSError as e:
+        raise Fail("error", f"usage: cannot create --out {path}: {e.strerror}", 3)
+    if not os.access(path, os.W_OK):
+        raise Fail("error", f"usage: --out {path} is not writable", 3)
+    return path
 
 
 def wait_for_job(api, pid, wait_s, stall_s, interval=2.0):

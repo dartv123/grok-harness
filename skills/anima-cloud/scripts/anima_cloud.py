@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import comfy_cloud as cc  # noqa: E402
 from comfy_cloud import Fail, emit  # noqa: E402
 
-VERSION = "1.2.0"
-DEFAULT_OUT = "/workspace/artifacts/anima"
+VERSION = "1.2.1"
+OUT_SUBDIR = "anima"  # default --out: see comfy_cloud.default_out()
 
 # ---------------------------------------------------------------- baked config
 # Shared model stack (from anima_api_workflow.json).
@@ -148,7 +148,10 @@ def build_parser():
                    metavar="NAME[:STRENGTH]", help="extra model-only LoRA (repeatable)")
     p.add_argument("--hires-lora", choices=("auto", "on", "off"), default="auto",
                    help="aesthetic boost LoRA; auto = on at >= 2 MP")
-    p.add_argument("--out", default=DEFAULT_OUT)
+    p.add_argument("--out", default=None,
+                   help=f"output folder (default: $HARNESS_OUT/{OUT_SUBDIR}, else "
+                        f"/workspace/artifacts/{OUT_SUBDIR} if /workspace exists, else "
+                        f"./artifacts/{OUT_SUBDIR})")
     p.add_argument("--wait", type=float, default=25,
                    help="seconds to wait before returning 'pending' (default 25)")
     p.add_argument("--stall", type=float, default=900,
@@ -322,6 +325,8 @@ def main(argv=None):
             cc.cancel(api, args.cancel)
             return 0
 
+        args.out = cc.ensure_out_dir(args.out or cc.default_out(OUT_SUBDIR))
+        cc.resume_args(args.out, args.key_file)
         if args.resume:
             pid = args.resume
             local_prefix = f"anima_job_{pid[:8]}"

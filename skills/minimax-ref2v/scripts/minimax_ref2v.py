@@ -22,8 +22,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import comfy_cloud as cc  # noqa: E402
 from comfy_cloud import Fail, emit  # noqa: E402
 
-VERSION = "1.1.0"
-DEFAULT_OUT = "/workspace/artifacts/minimax-ref2v"
+VERSION = "1.1.1"
+OUT_SUBDIR = "minimax-ref2v"  # default --out: see comfy_cloud.default_out()
 
 # ---------------------------------------------------------------- baked config
 # From minimax_ref2v_harness.json.
@@ -288,7 +288,10 @@ def build_parser():
                    help=f"override the diffusion model (default {MODEL}); exact filename")
     p.add_argument("--force-prompt", action="store_true",
                    help="skip the check that every <Picture N> in the prompt has a --ref")
-    p.add_argument("--out", default=DEFAULT_OUT)
+    p.add_argument("--out", default=None,
+                   help=f"output folder (default: $HARNESS_OUT/{OUT_SUBDIR}, else "
+                        f"/workspace/artifacts/{OUT_SUBDIR} if /workspace exists, else "
+                        f"./artifacts/{OUT_SUBDIR})")
     p.add_argument("--wait", type=float, default=30,
                    help="seconds to wait before returning 'pending' (default 30)")
     p.add_argument("--stall", type=float, default=1800,
@@ -434,6 +437,8 @@ def main(argv=None):
             cc.cancel(api, args.cancel)
             return 0
 
+        args.out = cc.ensure_out_dir(args.out or cc.default_out(OUT_SUBDIR))
+        cc.resume_args(args.out, args.key_file)
         if args.resume:
             pid = args.resume
             local_prefix = f"ref2v_job_{pid[:8]}"

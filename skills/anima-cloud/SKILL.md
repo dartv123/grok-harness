@@ -7,6 +7,8 @@ description: Generate anime/illustration images from a text prompt with the Anim
 
 Follow the setup and rules in [AGENTS.md](../../AGENTS.md) first. They cover setup, credits, secrets and how to handle each exit code.
 
+The commands below use Grok's sandbox path `/home/workdir/grok-harness`. Anywhere else, replace it with the repo folder (`<repo>` in AGENTS.md); don't look for `/home/workdir`.
+
 ## Generate
 
 ```bash
@@ -27,7 +29,7 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py --p
 | `--lora "file.safetensors:0.8"` | none | Extra LoRA. Repeatable; strength defaults to 1.0 |
 | `--steps N` / `--cfg X` | 20 / 2 | Override steps or CFG. Only when the user asks |
 | `--sampler NAME` / `--scheduler NAME` | `er_sde` / `simple` | Override the sampler or scheduler (`--list-models sampler` / `scheduler`). Only when the user asks |
-| `--out DIR` | `/workspace/artifacts/anima` | Output folder |
+| `--out DIR` | see AGENTS.md | Output folder (default: the `anima` subfolder; see "Output folder" in AGENTS.md) |
 
 Images of 2 MP or more (for example 1536×1536) automatically use a high-res aesthetic LoRA. You don't need to do anything for this.
 

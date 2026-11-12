@@ -7,6 +7,8 @@ description: Generate a short video clip with audio from reference images, and o
 
 Follow the setup and rules in [AGENTS.md](../../AGENTS.md) first. They cover setup, credits, secrets and how to handle each exit code.
 
+The commands below use Grok's sandbox path `/home/workdir/grok-harness`. Anywhere else, replace it with the repo folder (`<repo>` in AGENTS.md); don't look for `/home/workdir`.
+
 Reference images (and optionally reference videos) go in, one MP4 (24 fps, with generated audio) comes out. Separate audio files are not supported; a reference video's own soundtrack is the only audio reference.
 
 ## Generate
@@ -46,7 +48,7 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 | `--steps N` | 4 (8 without lightning) | Override the step count |
 | `--sampler NAME` / `--scheduler NAME` | `res_multistep` / `simple` | Override the sampler or scheduler. Only when the user asks |
 | `--ckpt NAME` | baked model | Override the diffusion model (exact filename; `--list-models model` shows what is on the account) |
-| `--out DIR` | `/workspace/artifacts/minimax-ref2v` | Output folder |
+| `--out DIR` | see AGENTS.md | Output folder (default: the `minimax-ref2v` subfolder; see "Output folder" in AGENTS.md) |
 
 **If the user wants the reference video's own sound in the result, use `--video-audio both`** (or `passthrough`). With the default `ref` the model generates new audio and does not copy the track, even when the prompt says `fully_copy`. The output keeps the track from video 1's start, so match `--duration` to the clip.
 
