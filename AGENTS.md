@@ -15,10 +15,11 @@ Run this again only if the files are missing. Then open the `SKILL.md` for the t
 | Skill | Use for |
 |---|---|
 | [`anima-cloud`](skills/anima-cloud/SKILL.md) | Anime/illustration images from text prompts (Anima model on Comfy Cloud) |
+| [`minimax-ref2v`](skills/minimax-ref2v/SKILL.md) | Short video clips with audio from reference images (MiniMax H3 Ref2VA on Comfy Cloud) |
 
 ## Rules
 
-1. **Tools are black boxes.** Don't read, unpack, modify or debug scripts or anything under `dev/` unless the user explicitly asks. Run the documented commands and act on the output.
+1. **Tools are black boxes.** Don't read, unpack, modify or debug scripts (including `skills/_shared/`) or anything under `dev/` unless the user explicitly asks. Run the documented commands and act on the output.
 2. **Every submission costs credits.** Submit once per user request. Never resubmit to get around a pending, stalled or failed job. Don't try variations the user didn't ask for.
 3. **Secrets.** The user tells you how API keys are provided. Never print, echo, log or paste a key, including in commands you show.
 4. **Showing results.** Output files go under `/workspace/artifacts/`. When a run completes, show the user every file listed in `path:` or `paths:`.
