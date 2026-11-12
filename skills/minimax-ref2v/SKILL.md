@@ -66,6 +66,12 @@ Use the default unless the user asks for a different model. These are confirmed 
 | `10erosMaxInt8Ref2va_v11.safetensors` | |
 | `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | |
 
+Compatible LoRA (pass with `--lora "<file>:<strength>"`; only when the user asks for it):
+
+| LoRA (`--lora`) | |
+|---|---|
+| `MysticXXX_MMH3-V5-ref2va.safetensors` | |
+
 ## Finding LoRA and model names
 
 ```bash
