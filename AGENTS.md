@@ -15,7 +15,7 @@ Run this again only if the files are missing. Then open the `SKILL.md` for the t
 | Skill | Use for |
 |---|---|
 | [`anima-cloud`](skills/anima-cloud/SKILL.md) | Anime/illustration images from text prompts (Anima model on Comfy Cloud) |
-| [`minimax-ref2v`](skills/minimax-ref2v/SKILL.md) | Short video clips with audio from reference images (MiniMax H3 Ref2VA on Comfy Cloud) |
+| [`minimax-ref2v`](skills/minimax-ref2v/SKILL.md) | Short video clips with audio from reference images and/or reference videos for motion, camera and sound (MiniMax H3 Ref2VA on Comfy Cloud) |
 
 ## Rules
 
