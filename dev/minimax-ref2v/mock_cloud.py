@@ -146,7 +146,8 @@ class Api(BaseHTTPRequestHandler):
                 "LoraLoaderModelOnly": {"input": {"required": {"lora_name": ["COMBO", {"options":
                     ["example_style_a.safetensors", "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors"]}]}}},
                 "ResolutionSelector": {"input": {"required": {"aspect_ratio": ["COMBO", {"options":
-                    ["1:1 (Square)", "4:3 (Standard)", "3:4 (Portrait)", "16:9 (Widescreen)", "9:16 (Mobile)", "3:2 (Photo)"]}]}}},
+                    ["1:1 (Square)", "2:3 (Portrait Photo)", "3:2 (Photo)", "3:4 (Portrait Standard)", "4:3 (Standard)",
+                     "9:16 (Portrait Widescreen)", "16:9 (Widescreen)", "21:9 (Ultrawide)"]}]}}},  # as on Cloud, 2026-11
             })
         self.send(404, {"code": "nf", "message": "nf"})
 

@@ -305,8 +305,8 @@ def validate(args, parser):
             parser.error(f"{flag} must be 0 (keep) or 64..4096")
     if not MIN_DURATION <= args.duration <= MAX_DURATION:
         parser.error(f"--duration must be {MIN_DURATION:g}..{MAX_DURATION:g} seconds")
-    if not 0.05 <= args.megapixels <= 2.0:
-        parser.error("--megapixels must be 0.05..2.0")
+    if not 0.1 <= args.megapixels <= 2.0:  # ResolutionSelector's own minimum is 0.1
+        parser.error("--megapixels must be 0.1..2.0")
     if args.steps is not None and not 1 <= args.steps <= 50:
         parser.error("--steps must be 1..50")
     if args.seed is None:
