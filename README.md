@@ -19,7 +19,7 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 | Skill | Status |
 |---|---|
 | `anima-cloud` | `base` variant (divingAnima v9.0, 20 steps, CFG 2). `--ckpt` swaps in any other Anima model / checkpoint on the account |
-| `minimax-ref2v` | MiniMax H3 reference-to-video with audio. Up to 5 reference images and up to 3 reference videos (uploaded by the tool; a video's soundtrack becomes `<Audio N>`), 5–15 s at 24 fps, stackable `--lora`, lightning LoRA on by default (`--no-lightning` for 8 steps). No separate audio files |
+| `minimax-ref2v` | MiniMax H3 reference-to-video with audio. Up to 5 reference images and up to 3 reference videos (uploaded by the tool; a video's soundtrack becomes `<Audio N>`, and `--video-audio passthrough|both` puts it into the output 1:1), 5–15 s at 24 fps, stackable `--lora`, lightning LoRA on by default (`--no-lightning` for 8 steps). No separate audio files |
 
 ### Models known to work with `--ckpt`
 

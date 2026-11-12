@@ -57,6 +57,14 @@ def check_graph(g):
             bad.append(f"{k} is not wired to a VHS_LoadVideo AUDIO output")
         elif inp.get(f"ref_videos.ref_video_{n}", [None])[0] != src:
             bad.append(f"{k} is not the soundtrack of ref_video_{n}")
+    cv = [n for n in g.values() if n["class_type"] == "CreateVideo"]
+    if len(cv) != 1:
+        bad.append("expected exactly one CreateVideo")
+    else:
+        src, slot = cv[0]["inputs"]["audio"]
+        kind = g.get(src, {}).get("class_type")
+        if not ((kind == "VAEDecodeAudio" and slot == 0) or (kind == "VHS_LoadVideo" and slot == 2)):
+            bad.append("CreateVideo audio is neither the generated track nor a video soundtrack")
     for nid, n in g.items():  # every link must resolve
         for k, v in n["inputs"].items():
             if isinstance(v, list) and len(v) == 2 and isinstance(v[0], str) and v[0] not in g:

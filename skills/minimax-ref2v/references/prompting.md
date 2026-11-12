@@ -117,7 +117,8 @@ Use `[keyframe completion + reference generation]`, add the line `<Picture 1> is
 - **Summary prefix:** `[reference generation]` when the video only donates motion or camera. `video editing` is for modifying the source clip in place, and `video continuation` for resuming after it; don't use them just because a video is present. Add `audio reuse` (copy the soundtrack) or `audio reference` (timbre or rhythm only) when `<Audio N>` is used, joined with ` + `.
 - **Retention markers for a video:** `attribute_transfer` (its motion or camera moves onto a different subject; the usual choice) or `weak_reference`. `fully_preserved` on a `<Video N>` means "keep the whole clip's structure", which is an edit job and lets the source performer and location leak in.
 - **Retention markers for audio:** `fully_copy` (the soundtrack is the final track 1:1), `partially_copy`, `reference` (timbre, delivery or rhythm; nothing copied) or `weak_reference`. `fully_copy` locks the soundtrack only; it does not drive the mouth or body, so the visual rhythm still comes from `<Video N>`.
-- **No audio wanted?** Pass `--no-video-audio`, and don't mention `<Audio N>`.
+- **Exact soundtrack wanted?** `fully_copy` in the prompt alone does not reproduce the track; the model generates new audio. Run with `--video-audio both` (the model hears it and the output carries it unchanged) or `passthrough` (output only; then don't mention `<Audio N>`).
+- **No audio reference wanted?** Pass `--video-audio off`, and don't mention `<Audio N>`.
 - **Don't over-prompt motion.** If a video supplies the performance, write "follow `<Video 1>`" with the same beats and timestamps instead of a second stroke-by-stroke description; invented extra motion fights the clip.
 - **The video's face beats your pictures.** A close, face-filling clip carries more identity than a still in a different pose, and the source performer can win. Define a motion dummy subject, and make the pictures win:
 

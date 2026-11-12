@@ -23,7 +23,7 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 ```
 
 - **`--ref`** is a reference image: up to 5 (png, jpg or webp, up to 25 MB each), repeatable. Local files are uploaded for you. **Order matters:** the first `--ref` is `<Picture 1>` in the prompt, the second `<Picture 2>`, and so on. Start with 2 to 4.
-- **`--video`** is a reference video for motion and camera: up to 3 (mp4, webm, mov or mkv, up to 100 MB each), repeatable, in order `<Video 1>`, `<Video 2>`. Its soundtrack is passed as `<Audio N>` with the same number, unless you add `--no-video-audio`. By default only the first frames matching `--duration` are loaded; `--video-skip` and `--video-frames` pick a different span.
+- **`--video`** is a reference video for motion and camera: up to 3 (mp4, webm, mov or mkv, up to 100 MB each), repeatable, in order `<Video 1>`, `<Video 2>`. Its soundtrack is passed to the model as `<Audio N>` with the same number; `--video-audio` changes that (below). By default only the first frames matching `--duration` are loaded; `--video-skip` and `--video-frames` pick a different span.
 - **At least one `--ref` or `--video` is required.**
 - **The prompt is sent exactly as written.** It must be the full six-section brick. The tool refuses a prompt that mentions a `<Picture N>`, `<Video N>` or `<Audio N>` with no matching file (`--force-prompt` skips the check).
 - **A clip takes minutes.** The tool returns within about 30 seconds with `status: pending` and a `next:` command; run it until it completes (see AGENTS.md).
@@ -31,7 +31,7 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 | Flag | Default | Meaning |
 |---|---|---|
 | `--prompt "<text>"` / `--prompt-file FILE` | required | The prompt (`-` reads stdin). Prefer the file for anything multi-line |
-| `--no-video-audio` | audio on | Don't pass the reference videos' soundtracks as `<Audio N>` |
+| `--video-audio MODE` | `ref` | Where the `--video` soundtrack goes. `ref`: to the model as `<Audio N>`; the clip's audio is generated. `passthrough`: video 1's track goes into the output unchanged and the model never hears it (don't cite `<Audio N>`). `both`: to the model and unchanged into the output. `off` (or `--no-video-audio`): nowhere |
 | `--video-fps F` | 24 | Resample each `--video` to this rate first (the model works at 24). `0` keeps the file's own rate |
 | `--video-skip N` | 0 | Skip the first N frames of each `--video` (at 24 fps, 48 frames = 2 s) |
 | `--video-frames N` | output length | Load at most N frames of each `--video`; `0` loads the whole file |
@@ -46,6 +46,8 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 | `--steps N` | 4 (8 without lightning) | Override the step count |
 | `--ckpt NAME` | baked model | Override the diffusion model (exact filename; `--list-models model` shows what is on the account) |
 | `--out DIR` | `/workspace/artifacts/minimax-ref2v` | Output folder |
+
+**If the user wants the reference video's own sound in the result, use `--video-audio both`** (or `passthrough`). With the default `ref` the model generates new audio and does not copy the track, even when the prompt says `fully_copy`. The output keeps the track from video 1's start, so match `--duration` to the clip.
 
 Lightning is a fast pass and can be sloppy on identity and cadence. If the person in the clip doesn't match the references, tell the user and offer `--no-lightning` (and `--ref-size max`) instead of resubmitting on your own.
 
