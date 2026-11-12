@@ -134,7 +134,7 @@ retention_analysis:
 ```
 
   Also use `--ref-size max`, and give a picture of the target person already in the target scene and camera, made without the motion video, as `<Picture 1>`. If a clip keeps stealing the face, shrink it with `--video-width` / `--video-height` (short edge about 512 to 640), or ask the user for a cropped clip.
-- **Reference video specs:** at least 5 frames (about 0.2 s), ideally at native 24 to 25 fps (a sparse or low-fps clip becomes held poses, not keyframes), and only the first frames up to the output length are used. If the soundtrack is `fully_copy`, keep `--duration` no longer than the video, or the audio dies after the file ends.
+- **Reference video specs:** at least 5 frames (about 0.2 s). The tool resamples clips to 24 fps by default, but a sparse or low-fps source (a few frames a second) still becomes held poses, not keyframes, so give it a real-motion clip. Only the first frames up to the output length are used. If the soundtrack is `fully_copy`, keep `--duration` no longer than the video, or the audio dies after the file ends.
 - **Cost:** video tokens ride every sampler step, so expect roughly 2 to 3 times the wall time of a stills-only run, and more at high resolution.
 - **A video is semantic, not an editor.** Expect drift in cuts and faces; don't promise a pixel-exact copy.
 

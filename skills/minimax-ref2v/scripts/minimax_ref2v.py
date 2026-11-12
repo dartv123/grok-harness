@@ -80,7 +80,7 @@ def build_graph(a):
     # graph); the loader's audio output is the matching <Audio N> unless --no-video-audio.
     for i, name in enumerate(a.video_names):
         g[f"vid_{i}"] = {"class_type": "VHS_LoadVideo",
-                         "inputs": {"video": name, "force_rate": 0,
+                         "inputs": {"video": name, "force_rate": a.video_fps,
                                     "custom_width": a.video_width,
                                     "custom_height": a.video_height,
                                     "frame_load_cap": a.video_frames_used,
@@ -213,6 +213,9 @@ def build_parser():
                         f"its soundtrack is <Audio N> unless --no-video-audio")
     p.add_argument("--no-video-audio", dest="video_audio", action="store_false",
                    help="do not pass the reference videos' soundtracks as <Audio N>")
+    p.add_argument("--video-fps", type=float, default=FPS, metavar="FPS",
+                   help=f"resample each --video to this frame rate before use (default {FPS}, "
+                        f"the model's rate; 0 = keep the file's own rate)")
     p.add_argument("--video-skip", type=int, default=0, metavar="N",
                    help="skip the first N frames of each --video (default 0)")
     p.add_argument("--video-frames", type=int, default=None, metavar="N",
@@ -296,6 +299,8 @@ def validate(args, parser):
                     parser.error(f"{flag} must be {what}: {os.path.basename(f)}")
                 if os.path.getsize(f) > cap:
                     parser.error(f"{flag} over {cap >> 20} MB: {os.path.basename(f)}")
+    if not 0 <= args.video_fps <= 60:  # VHS force_rate range
+        parser.error("--video-fps must be 0 (keep) or up to 60")
     if args.video_skip < 0:
         parser.error("--video-skip must be 0 or more")
     if args.video_frames is not None and args.video_frames != 0 and args.video_frames < 5:

@@ -46,6 +46,8 @@ def check_graph(g):
         for f in ("frame_load_cap", "skip_first_frames", "custom_width", "custom_height"):
             if not isinstance(node["inputs"].get(f), int) or node["inputs"][f] < 0:
                 bad.append(f"{src} {f} is not a non-negative int")
+        if not isinstance(node["inputs"].get("force_rate"), (int, float)) or not 0 <= node["inputs"]["force_rate"] <= 60:
+            bad.append(f"{src} force_rate is not 0..60")
     for k in sorted(k for k in inp if k.startswith("ref_audios.ref_audio_")):
         src, slot = inp[k]
         if g.get(src, {}).get("class_type") != "VHS_LoadVideo" or slot != 2:

@@ -32,6 +32,7 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 |---|---|---|
 | `--prompt "<text>"` / `--prompt-file FILE` | required | The prompt (`-` reads stdin). Prefer the file for anything multi-line |
 | `--no-video-audio` | audio on | Don't pass the reference videos' soundtracks as `<Audio N>` |
+| `--video-fps F` | 24 | Resample each `--video` to this rate first (the model works at 24). `0` keeps the file's own rate |
 | `--video-skip N` | 0 | Skip the first N frames of each `--video` (at 24 fps, 48 frames = 2 s) |
 | `--video-frames N` | output length | Load at most N frames of each `--video`; `0` loads the whole file |
 | `--video-width W` / `--video-height H` | 0 (keep) | Resize the `--video` frames, e.g. to stop a close-up face in the clip beating the pictures |
