@@ -77,7 +77,9 @@ def build_graph(a):
         g[f"img_{i}"] = {"class_type": "LoadImage", "inputs": {"image": name}}
         ref_inputs[f"ref_images.ref_image_{i}"] = [f"img_{i}", 0]
     # A video reference is a batch of frames (capped at the output length, as in the source
-    # graph); the loader's audio output is the matching <Audio N> unless --no-video-audio.
+    # graph). Its soundtrack goes to the paired ref_video_audios socket ("soundtrack of the
+    # same-numbered reference video"), not ref_audios ("standalone reference audio") as in the
+    # source graph, which made the model ignore it. It is <Audio N> unless --no-video-audio.
     for i, name in enumerate(a.video_names):
         g[f"vid_{i}"] = {"class_type": "VHS_LoadVideo",
                          "inputs": {"video": name, "force_rate": a.video_fps,
@@ -88,7 +90,7 @@ def build_graph(a):
                                     "format": "AnimateDiff"}}
         ref_inputs[f"ref_videos.ref_video_{i}"] = [f"vid_{i}", 0]
         if a.video_audio:
-            ref_inputs[f"ref_audios.ref_audio_{i}"] = [f"vid_{i}", 2]
+            ref_inputs[f"ref_video_audios.ref_video_audio_{i}"] = [f"vid_{i}", 2]
     g["ref"] = {"class_type": "MiniMaxH3ReferenceToVideo",
                 "inputs": {"prompt": a.prompt_text, "width": ["res", 0], "height": ["res", 1],
                            "length": a.frames, "ref_image_size": a.ref_size,

@@ -48,10 +48,15 @@ def check_graph(g):
                 bad.append(f"{src} {f} is not a non-negative int")
         if not isinstance(node["inputs"].get("force_rate"), (int, float)) or not 0 <= node["inputs"]["force_rate"] <= 60:
             bad.append(f"{src} force_rate is not 0..60")
-    for k in sorted(k for k in inp if k.startswith("ref_audios.ref_audio_")):
+    if any(k.startswith("ref_audios.") for k in inp):
+        bad.append("ref_audios is for standalone audio; a video's soundtrack goes to ref_video_audios")
+    for k in sorted(k for k in inp if k.startswith("ref_video_audios.ref_video_audio_")):
         src, slot = inp[k]
+        n = k.rsplit("_", 1)[1]
         if g.get(src, {}).get("class_type") != "VHS_LoadVideo" or slot != 2:
             bad.append(f"{k} is not wired to a VHS_LoadVideo AUDIO output")
+        elif inp.get(f"ref_videos.ref_video_{n}", [None])[0] != src:
+            bad.append(f"{k} is not the soundtrack of ref_video_{n}")
     for nid, n in g.items():  # every link must resolve
         for k, v in n["inputs"].items():
             if isinstance(v, list) and len(v) == 2 and isinstance(v[0], str) and v[0] not in g:
