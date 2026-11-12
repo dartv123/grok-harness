@@ -58,7 +58,7 @@ Compatible LoRAs for minimax-ref2v (via `--lora`, recommended strength 0.5): `My
 | `TenStrip__10Eros-Max__10Eros_Max_h3_TURBO-hybrid_beta5_int8.safetensors` | Hybrid |
 | `10erosMaxInt8Ref2va_v11.safetensors` | Hybrid |
 
-Exact filename, as for minimax-ref2v.
+Exact filename, as for minimax-ref2v. The same MysticXXX LoRAs (V5, V4) work via `--lora` at a recommended 0.5. The source workflow applied V4 at 1.0 on every turbo run; the tool leaves it optional.
 
 All these lists are repeated in each skill's SKILL.md for the agent; update both when they change. Sampling settings for a model that needs its own go in `MODEL_PRESETS` (next section). None are defined yet.
 

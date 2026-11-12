@@ -62,6 +62,13 @@ Use the default unless the user asks for a different model.
 | `TenStrip__10Eros-Max__10Eros_Max_h3_TURBO-hybrid_beta5_int8.safetensors` | Hybrid |
 | `10erosMaxInt8Ref2va_v11.safetensors` | Hybrid |
 
+Compatible LoRAs (pass with `--lora "<file>:<strength>"`; only when the user asks for one). Use the recommended strength unless the user gives another:
+
+| LoRA (`--lora`) | Recommended strength |
+|---|---|
+| `MysticXXX_MMH3-V5-ref2va.safetensors` | 0.5 (`--lora "MysticXXX_MMH3-V5-ref2va.safetensors:0.5"`) |
+| `MysticXXX_MMH3-V4.safetensors` | 0.5 (`--lora "MysticXXX_MMH3-V4.safetensors:0.5"`) |
+
 ## Finding LoRA and model names
 
 ```bash
