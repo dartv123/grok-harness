@@ -326,6 +326,36 @@ def print_names(kind, names, flt, cap=12):
         print(f"  ... +{len(names) - cap} more (use --filter)")
 
 
+# ---------------------------------------------------------------- model presets
+def find_preset(presets, model_name):
+    """Per-model sampling preset for a model filename: (key, preset) or (None, None).
+
+    `presets` maps a model filename to a dict of tool-specific settings. Matching is by
+    exact name, then basename, then case-insensitive stem (no extension), so a preset
+    keyed 'foo.safetensors' also covers '--ckpt foo' and 'sub/foo.safetensors'.
+    """
+    if not presets or not model_name:
+        return None, None
+    base = os.path.basename(model_name)
+    stem = os.path.splitext(base)[0].lower()
+    for key in (lambda k: k == model_name,
+                lambda k: os.path.basename(k) == base,
+                lambda k: os.path.splitext(os.path.basename(k))[0].lower() == stem):
+        for k, p in presets.items():
+            if key(k):
+                return k, p
+    return None, None
+
+
+def print_presets(presets, fields):
+    """--list-presets: one line per model with its non-default settings."""
+    emit(presets=len(presets))
+    for k, p in presets.items():
+        settings = ", ".join(f"{f}={p[f]}" for f in fields if f in p)
+        note = f"  # {p['note']}" if p.get("note") else ""
+        print(f"  {k}: {settings or '(no overrides)'}{note}")
+
+
 def parse_lora(spec):
     name, strength = spec, 1.0
     if ":" in spec:

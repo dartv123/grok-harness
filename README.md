@@ -29,9 +29,20 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 | `divingAnima_v90.safetensors` | `UNETLoader` | variant default |
 | `real-dream-v5-anima-bf16.safetensors` | `UNETLoader` | photoreal-leaning Anima build |
 
-Any other diffusion model or checkpoint on the account also works, including partial names — check with `--list-models model --filter <text>`. Sampler settings stay the variant's; pass `--steps` / `--cfg` if the model wants different ones.
+Any other diffusion model or checkpoint on the account also works, including partial names — check with `--list-models model --filter <text>`.
 
 Cloud's `/api/object_info` does not list every imported model (the three above are missing from it), so `--ckpt` submits an unknown name as-is and lets the job decide; `--loader unet|ckpt` forces the loader if `auto` guesses wrong.
+
+### Model presets (both skills)
+
+When a model needs its own sampling settings, add it to `MODEL_PRESETS` near the top of the tool's script instead of telling the agent to pass flags. The preset applies automatically whenever that model is in use (the default model or `--ckpt`). Precedence: explicit flag > preset > baked default. `--no-preset` ignores it and `--list-presets` shows the table.
+
+| Tool | Preset keys |
+|---|---|
+| `anima_cloud.py` | `steps`, `cfg`, `sampler`, `scheduler`, `note` |
+| `minimax_ref2v.py` | `sampler`, `scheduler`, `lightning` (True/False), `steps_lightning`, `steps_full`, `note` |
+
+Keys are model filenames. Matching also accepts the name without the extension. The lookup lives in `skills/_shared/comfy_cloud.py` (`find_preset`), so a new tool can reuse it.
 
 ## Adding a workflow
 

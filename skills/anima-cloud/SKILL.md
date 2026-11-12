@@ -25,6 +25,8 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py --p
 | `--loader KIND` | `auto` | Loader for `--ckpt`: `auto` \| `unet` (UNETLoader) \| `ckpt` (CheckpointLoaderSimple) |
 | `--batch N` | 1 | 1–8 images in one job |
 | `--lora "file.safetensors:0.8"` | none | Extra LoRA. Repeatable; strength defaults to 1.0 |
+| `--steps N` / `--cfg X` | 20 / 2 | Override steps or CFG. Only when the user asks |
+| `--sampler NAME` / `--scheduler NAME` | `er_sde` / `simple` | Override the sampler or scheduler (`--list-models sampler` / `scheduler`). Only when the user asks |
 | `--out DIR` | `/workspace/artifacts/anima` | Output folder |
 
 Images of 2 MP or more (for example 1536×1536) automatically use a high-res aesthetic LoRA. You don't need to do anything for this.
@@ -42,8 +44,8 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py \
 - **A name the catalog does not know is still submitted**, with a `warning:` line. Cloud does not enumerate every import — private Anima builds run fine while missing from `/api/object_info` — so Cloud's own validation is the check. If the file really is absent the job fails with a `value_not_in_list` node error (exit 1).
 - `--loader unet|ckpt` forces the loader instead of picking it from the catalog (default `auto`: diffusion model where listed, `UNETLoader` when unlisted).
 - `--ckpt` **queries `/api/object_info` first**, so it needs the key (and network) even with `--dry-run`.
-- Sampler settings stay the variant's (`--steps` / `--cfg` override them). The CLIP and VAE stack is unchanged.
-- The result block gains `model:` and `loader:` lines, and the filename gets a short model tag.
+- **Sampling settings follow the model.** Models that need their own steps, CFG, sampler or scheduler have a preset stored in the tool, applied automatically. Other models use the variant's settings. Don't pass sampling flags to compensate for a model. `--list-presets` shows the presets. Explicit flags still win, and `--no-preset` ignores the preset; use either only when the user asks. The CLIP and VAE stack is unchanged.
+- The result block shows `model:` and `loader:`, and the filename gets a short model tag.
 
 ## Finding LoRA names
 
@@ -67,5 +69,8 @@ path: /workspace/artifacts/anima/anima_base_261110-221500_s4815162342.png
 variant: base
 size: 832x1216
 seed: 4815162342
+model: divingAnima_v90.safetensors
+loader: unet
+sampling: 20 steps, CFG 2, er_sde/simple
 prompt_id: 1234abcd-...
 ```

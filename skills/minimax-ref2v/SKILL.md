@@ -40,10 +40,11 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 | `--aspect A` | `4:3 (Standard)` | e.g. `16:9`, `9:16`, `1:1`, `3:4`. `--list-models aspect` shows the exact options |
 | `--megapixels M` | 0.2 | Frame size. Larger is slower and costs more |
 | `--seed N` | random | Always reported; reuse it to reproduce or tweak a clip |
-| `--no-lightning` | lightning on | Turns off the 4-step lightning LoRA and uses 8 steps. Slower; use it for a final identity-locked pass |
+| `--no-lightning` | lightning on | Turns off the 4-step lightning LoRA and uses 8 steps. Slower; use it for a final identity-locked pass. Same as `--lightning off` (`--lightning on` forces it on) |
 | `--ref-size match\|max` | `match` | `max` keeps identity best from the stills but is slower |
 | `--lora "file.safetensors:0.8"` | none | Model-only LoRA. Repeat to stack; they apply in the order given. Strength defaults to 1.0 |
 | `--steps N` | 4 (8 without lightning) | Override the step count |
+| `--sampler NAME` / `--scheduler NAME` | `res_multistep` / `simple` | Override the sampler or scheduler. Only when the user asks |
 | `--ckpt NAME` | baked model | Override the diffusion model (exact filename; `--list-models model` shows what is on the account) |
 | `--out DIR` | `/workspace/artifacts/minimax-ref2v` | Output folder |
 
@@ -51,13 +52,15 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 
 Lightning is a fast pass and can be sloppy on identity and cadence. If the person in the clip doesn't match the references, tell the user and offer `--no-lightning` (and `--ref-size max`) instead of resubmitting on your own.
 
+**Model presets.** Some models need their own sampler, scheduler, steps or lightning setting. Those are stored in the tool and apply automatically when `--ckpt` (or the default model) matches, so don't pass sampling flags to compensate for a model. The `sampling:` result line ends in `(preset)` when one was used. `--list-presets` shows them. Explicit flags still win, and `--no-preset` ignores the preset; use either only when the user asks.
+
 ## Finding LoRA and model names
 
 ```bash
 python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py --list-models lora --filter <text>
 ```
 
-Kinds: `model`, `lora`, `aspect`.
+Kinds: `model`, `lora`, `aspect`, `sampler`, `scheduler`.
 
 ## Example result
 
@@ -67,7 +70,7 @@ path: /workspace/artifacts/minimax-ref2v/ref2v_261112-221500_s4815162342.mp4
 clip: 10s, 24 fps, 243 frames, 4:3 (Standard)
 refs: 2
 seed: 4815162342
-steps: 4 (lightning)
+sampling: 4 steps (lightning), res_multistep/simple
 model: TenStrip__10Eros-Max__10Eros_Max_h3_8stepTURBO_beta6_int8.safetensors
 prompt_id: 1234abcd-...
 ```

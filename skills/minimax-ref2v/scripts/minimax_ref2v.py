@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import comfy_cloud as cc  # noqa: E402
 from comfy_cloud import Fail, emit  # noqa: E402
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 DEFAULT_OUT = "/workspace/artifacts/minimax-ref2v"
 
 # ---------------------------------------------------------------- baked config
@@ -46,11 +46,29 @@ MAX_VIDEOS = 3  # official Ref2VA cap; each video's soundtrack becomes <Audio N>
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 VIDEO_EXTS = {".mp4", ".webm", ".mov", ".mkv"}
 
+# Per-model sampling presets. When the diffusion model in use (MODEL, or --ckpt) matches a
+# key, its settings replace the baked ones above; explicit --sampler/--scheduler/--steps/
+# --lightning still win, and --no-preset ignores the table. Keys are filenames; matching
+# also accepts the name without extension. Any subset of:
+#   sampler, scheduler       KSamplerSelect / BasicScheduler names
+#   lightning                True/False: default state of the 4-step lightning LoRA
+#   steps_lightning          steps when lightning is on  (baked: STEPS_LIGHTNING)
+#   steps_full               steps when lightning is off (baked: STEPS_FULL)
+#   note                     free text shown by --list-presets
+MODEL_PRESETS = {
+    # "some_h3_finetune.safetensors": {"sampler": "euler", "scheduler": "beta",
+    #                                  "lightning": False, "steps_full": 12,
+    #                                  "note": "author's recommended"},
+}
+PRESET_FIELDS = ("sampler", "scheduler", "lightning", "steps_lightning", "steps_full")
+
 # kind -> [(node class, input field)], first one present in /api/object_info wins
 LIST_KINDS = {
     "model": [("UNETLoader", "unet_name")],
     "lora": [("LoraLoaderModelOnly", "lora_name"), ("LoraLoader", "lora_name")],
     "aspect": [("ResolutionSelector", "aspect_ratio")],
+    "sampler": [("KSamplerSelect", "sampler_name")],
+    "scheduler": [("BasicScheduler", "scheduler")],
 }
 
 
@@ -117,9 +135,9 @@ def build_graph(a):
     else:
         model = sched_model = stack("lora", ["unet", 0])
 
-    g["sel"] = {"class_type": "KSamplerSelect", "inputs": {"sampler_name": SAMPLER}}
+    g["sel"] = {"class_type": "KSamplerSelect", "inputs": {"sampler_name": a.sampler_used}}
     g["sched"] = {"class_type": "BasicScheduler",
-                  "inputs": {"scheduler": SCHEDULER, "steps": a.steps_used, "denoise": 1,
+                  "inputs": {"scheduler": a.scheduler_used, "steps": a.steps_used, "denoise": 1,
                              "model": sched_model}}
     g["noise"] = {"class_type": "RandomNoise", "inputs": {"noise_seed": a.seed}}
     g["guider"] = {"class_type": "BasicGuider",
@@ -245,11 +263,21 @@ def build_parser():
     p.add_argument("--megapixels", type=float, default=DEFAULT_MEGAPIXELS,
                    help=f"frame size in megapixels (default {DEFAULT_MEGAPIXELS}); larger is slower")
     p.add_argument("--seed", type=int, default=None, help="default: random")
-    p.add_argument("--no-lightning", action="store_true",
-                   help=f"disable the 4-step lightning LoRA and use {STEPS_FULL} steps "
-                        f"(slower; better identity and cadence)")
+    p.add_argument("--lightning", choices=("auto", "on", "off"), default="auto",
+                   help=f"4-step lightning LoRA: auto = on unless the model's preset says off; "
+                        f"off = {STEPS_FULL} steps, slower, better identity and cadence")
+    p.add_argument("--no-lightning", dest="lightning", action="store_const", const="off",
+                   help="same as --lightning off")
     p.add_argument("--steps", type=int, default=None,
-                   help=f"override steps (default {STEPS_LIGHTNING} with lightning, {STEPS_FULL} without)")
+                   help=f"override steps (default {STEPS_LIGHTNING} with lightning, {STEPS_FULL} without, "
+                        f"or the model's preset)")
+    p.add_argument("--sampler", default=None,
+                   help=f"override sampler (default {SAMPLER} or the model's preset; --list-models sampler)")
+    p.add_argument("--scheduler", default=None,
+                   help=f"override scheduler (default {SCHEDULER} or the model's preset; "
+                        f"--list-models scheduler)")
+    p.add_argument("--no-preset", action="store_true",
+                   help="ignore the per-model preset; use the baked sampling settings")
     p.add_argument("--ref-size", choices=("match", "max"), default="match",
                    help="reference image resolution: match = cheaper, max = best identity, slower")
     p.add_argument("--lora", dest="loras", type=cc.parse_lora, action="append", default=[],
@@ -272,6 +300,7 @@ def build_parser():
                    help="print API JSON, upload and submit nothing (no key needed)")
     g.add_argument("--resume", metavar="PROMPT_ID", help="wait for / download an existing job")
     g.add_argument("--cancel", metavar="PROMPT_ID", help="remove a job from the queue")
+    g.add_argument("--list-presets", action="store_true", help="per-model sampling presets")
     g.add_argument("--list-models", choices=sorted(LIST_KINDS), metavar="KIND",
                    help=f"list Cloud options: {', '.join(sorted(LIST_KINDS))}")
     p.add_argument("--filter", default="", help="substring filter for --list-models")
@@ -349,12 +378,33 @@ def validate(args, parser):
     args.model_name = args.ckpt or MODEL
     if args.ckpt and not os.path.splitext(args.ckpt)[1]:
         args.model_name = args.ckpt + ".safetensors"
-    args.lightning = not args.no_lightning
-    args.steps_used = args.steps or (STEPS_LIGHTNING if args.lightning else STEPS_FULL)
+    resolve_sampling(args)
     args.frames = frames_for(args.duration)
     args.video_frames_used = args.frames if args.video_frames is None else args.video_frames
     args.prefix = f"ref2v_{time.strftime('%y%m%d-%H%M%S')}"
     args.local_prefix = f"{args.prefix}_s{args.seed}"
+
+
+def resolve_sampling(args):
+    """Sampling settings in force: explicit flag > model preset > baked."""
+    key, p = (None, None) if args.no_preset else cc.find_preset(MODEL_PRESETS, args.model_name)
+    p = p or {}
+    args.preset = key
+    args.lightning = (args.lightning == "on" or
+                      (args.lightning == "auto" and p.get("lightning", True)))
+    if args.lightning:
+        default_steps = p.get("steps_lightning", STEPS_LIGHTNING)
+    else:
+        default_steps = p.get("steps_full", STEPS_FULL)
+    args.steps_used = args.steps or default_steps
+    args.sampler_used = args.sampler or p.get("sampler", SAMPLER)
+    args.scheduler_used = args.scheduler or p.get("scheduler", SCHEDULER)
+
+
+def sampling_line(args):
+    light = " (lightning)" if args.lightning else ""
+    src = " (preset)" if args.preset else ""
+    return f"{args.steps_used} steps{light}, {args.sampler_used}/{args.scheduler_used}{src}"
 
 
 def main(argv=None):
@@ -362,6 +412,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     pid = None
     try:
+        if args.list_presets:
+            cc.print_presets(MODEL_PRESETS, PRESET_FIELDS)
+            return 0
         if not (args.resume or args.cancel or args.list_models):
             validate(args, parser)
             if args.dry_run:
@@ -398,7 +451,7 @@ def main(argv=None):
                  refs=len(args.refs), videos=len(args.videos),
                  audio="video 1 soundtrack (1:1)" if args.passthrough_audio else "generated",
                  seed=args.seed,
-                 steps=f"{args.steps_used}{' (lightning)' if args.lightning else ''}",
+                 sampling=sampling_line(args),
                  model=args.model_name)
         emit(prompt_id=pid)
         return 0

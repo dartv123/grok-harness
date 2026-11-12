@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import comfy_cloud as cc  # noqa: E402
 from comfy_cloud import Fail, emit  # noqa: E402
 
-VERSION = "1.1.1"
+VERSION = "1.2.0"
 DEFAULT_OUT = "/workspace/artifacts/anima"
 
 # ---------------------------------------------------------------- baked config
@@ -48,12 +48,24 @@ VARIANTS = {
 }
 DEFAULT_VARIANT = "base"
 
+# Per-model sampling presets. When the model in use (the variant's, or --ckpt) matches a
+# key, its settings replace the variant's; explicit --steps/--cfg/--sampler/--scheduler
+# still win, and --no-preset ignores the table. Keys are filenames; matching also accepts
+# the name without extension. Any subset of: steps, cfg, sampler, scheduler, note.
+MODEL_PRESETS = {
+    # "someAnimaMix_v1.safetensors": {"sampler": "euler_ancestral", "scheduler": "beta",
+    #                                 "steps": 28, "cfg": 4.0, "note": "author's recommended"},
+}
+PRESET_FIELDS = ("steps", "cfg", "sampler", "scheduler")
+
 LIST_MODEL_KINDS = {
     "unet": ("UNETLoader", "unet_name"),
     "lora": ("LoraLoader", "lora_name"),
     "clip": ("CLIPLoader", "clip_name"),
     "vae": ("VAELoader", "vae_name"),
     "ckpt": ("CheckpointLoaderSimple", "ckpt_name"),
+    "sampler": ("KSampler", "sampler_name"),
+    "scheduler": ("KSampler", "scheduler"),
 }
 # `model` is not a loader kind: it lists both diffusion models (unet) and checkpoints (ckpt).
 MODEL_KINDS = ("unet", "ckpt")
@@ -96,9 +108,9 @@ def build_graph(args):
                               "batch_size": args.batch}}
     g["sampler"] = {"class_type": "KSampler",
                     "inputs": {"seed": args.seed,
-                               "steps": args.steps if args.steps else v["steps"],
-                               "cfg": args.cfg if args.cfg is not None else v["cfg"],
-                               "sampler_name": v["sampler"], "scheduler": v["scheduler"],
+                               "steps": args.sampling["steps"], "cfg": args.sampling["cfg"],
+                               "sampler_name": args.sampling["sampler"],
+                               "scheduler": args.sampling["scheduler"],
                                "denoise": 1.0, "model": model, "positive": ["pos", 0],
                                "negative": ["neg", 0], "latent_image": ["latent", 0]}}
     g["decode"] = {"class_type": "VAEDecode",
@@ -126,8 +138,12 @@ def build_parser():
     p.add_argument("--height", type=int, default=1216)
     p.add_argument("--seed", type=int, default=None, help="default: random")
     p.add_argument("--batch", type=int, default=1)
-    p.add_argument("--steps", type=int, default=None, help="override variant steps")
-    p.add_argument("--cfg", type=float, default=None, help="override variant CFG")
+    p.add_argument("--steps", type=int, default=None, help="override steps")
+    p.add_argument("--cfg", type=float, default=None, help="override CFG")
+    p.add_argument("--sampler", default=None, help="override sampler_name (--list-models sampler)")
+    p.add_argument("--scheduler", default=None, help="override scheduler (--list-models scheduler)")
+    p.add_argument("--no-preset", action="store_true",
+                   help="ignore the per-model preset; use the variant's sampling settings")
     p.add_argument("--lora", dest="loras", type=cc.parse_lora, action="append", default=[],
                    metavar="NAME[:STRENGTH]", help="extra model-only LoRA (repeatable)")
     p.add_argument("--hires-lora", choices=("auto", "on", "off"), default="auto",
@@ -144,6 +160,7 @@ def build_parser():
     g.add_argument("--resume", metavar="PROMPT_ID", help="wait for / download an existing job")
     g.add_argument("--cancel", metavar="PROMPT_ID", help="remove a job from the queue")
     g.add_argument("--list-variants", action="store_true")
+    g.add_argument("--list-presets", action="store_true", help="per-model sampling presets")
     g.add_argument("--list-models", choices=sorted(LIST_KINDS), metavar="KIND",
                    help=f"list Cloud model files: {', '.join(sorted(LIST_KINDS))} "
                         f"('model' = diffusion models + checkpoints)")
@@ -164,6 +181,10 @@ def validate(args, parser):
         parser.error("--seed must be 0..2^64-1")
     if not args.prompt:
         parser.error("--prompt is required")
+    if args.steps is not None and not 1 <= args.steps <= 150:
+        parser.error("--steps must be 1..150")
+    if args.cfg is not None and not 0 <= args.cfg <= 30:
+        parser.error("--cfg must be 0..30")
     prefix = "" if args.no_quality or not QUALITY_PREFIX else QUALITY_PREFIX.rstrip(", ") + ", "
     args.full_prompt = prefix + args.prompt.strip()
     if args.negative is None:
@@ -182,6 +203,25 @@ def set_prefix(args):
                  os.path.splitext(os.path.basename(name))[0].lower()).strip("-")[:24]
     args.prefix = f"anima_{args.variant}{'_' + tag if tag else ''}_{stamp}"
     args.local_prefix = f"{args.prefix}_s{args.seed}"
+
+
+def resolve_sampling(args):
+    """Sampling settings in force: explicit flag > model preset > variant."""
+    v = VARIANTS[args.variant]
+    model = getattr(args, "model_name", None) or v["unet"]
+    key, preset = (None, None) if args.no_preset else cc.find_preset(MODEL_PRESETS, model)
+    s = {f: (preset or {}).get(f, v[f]) for f in PRESET_FIELDS}
+    for f in PRESET_FIELDS:
+        flag = getattr(args, f)
+        if flag is not None:
+            s[f] = flag
+    args.sampling, args.preset = s, key
+
+
+def sampling_line(args):
+    s = args.sampling
+    src = " (preset)" if args.preset else ""
+    return f"{s['steps']} steps, CFG {s['cfg']:g}, {s['sampler']}/{s['scheduler']}{src}"
 
 
 def names_from_info(info, kind):
@@ -247,6 +287,9 @@ def main(argv=None):
             for name, v in VARIANTS.items():
                 print(f"{name}{' (default)' if name == DEFAULT_VARIANT else ''}: {v['desc']}")
             return 0
+        if args.list_presets:
+            cc.print_presets(MODEL_PRESETS, PRESET_FIELDS)
+            return 0
 
         def make_api():
             return cc.Api(args.base_url, cc.load_key(args.key_file), f"anima_cloud/{VERSION}")
@@ -264,6 +307,7 @@ def main(argv=None):
                           f"(Cloud does not list every import); submitting as-is",
                           file=sys.stderr if args.dry_run else sys.stdout)
                 set_prefix(args)
+            resolve_sampling(args)
             graph = build_graph(args)
             if args.dry_run:
                 print(json.dumps({"prompt": graph}, indent=1))
@@ -290,7 +334,7 @@ def main(argv=None):
         if not args.resume:
             emit(variant=args.variant, size=f"{args.width}x{args.height}", seed=args.seed)
             emit(model=getattr(args, "model_name", None) or VARIANTS[args.variant]["unet"],
-                 loader=getattr(args, "model_loader", "unet"))
+                 loader=getattr(args, "model_loader", "unet"), sampling=sampling_line(args))
         emit(prompt_id=pid)
         return 0
     except Fail as e:
