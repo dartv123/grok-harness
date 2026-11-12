@@ -45,7 +45,7 @@ All three load with `UNETLoader`. Partial names work (`--ckpt silvermoon`). Clou
 
 Pass the exact filename (the `.safetensors` extension may be left off). Unlike anima-cloud, no partial-name lookup is done.
 
-Compatible LoRA for minimax-ref2v: `MysticXXX_MMH3-V5-ref2va.safetensors` (via `--lora`).
+Compatible LoRAs for minimax-ref2v (via `--lora`, recommended strength 0.5): `MysticXXX_MMH3-V5-ref2va.safetensors`, `MysticXXX_MMH3-V4.safetensors`.
 
 All these lists are repeated in each skill's SKILL.md for the agent; update both when they change. Sampling settings for a model that needs its own go in `MODEL_PRESETS` (next section). None are defined yet.
 

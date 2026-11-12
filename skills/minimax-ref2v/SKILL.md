@@ -66,11 +66,12 @@ Use the default unless the user asks for a different model. These are confirmed 
 | `10erosMaxInt8Ref2va_v11.safetensors` | |
 | `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | |
 
-Compatible LoRA (pass with `--lora "<file>:<strength>"`; only when the user asks for it):
+Compatible LoRAs (pass with `--lora "<file>:<strength>"`; only when the user asks for one). Use the recommended strength unless the user gives another:
 
-| LoRA (`--lora`) | |
+| LoRA (`--lora`) | Recommended strength |
 |---|---|
-| `MysticXXX_MMH3-V5-ref2va.safetensors` | |
+| `MysticXXX_MMH3-V5-ref2va.safetensors` | 0.5 (`--lora "MysticXXX_MMH3-V5-ref2va.safetensors:0.5"`) |
+| `MysticXXX_MMH3-V4.safetensors` | 0.5 (`--lora "MysticXXX_MMH3-V4.safetensors:0.5"`) |
 
 ## Finding LoRA and model names
 
