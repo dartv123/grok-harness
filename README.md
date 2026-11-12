@@ -69,7 +69,8 @@ When a model needs its own sampling settings, add it to `MODEL_PRESETS` near the
 | Tool | Preset keys |
 |---|---|
 | `anima_cloud.py` | `steps`, `cfg`, `sampler`, `scheduler`, `note` |
-| `minimax_ref2v.py`, `minimax_fl2v.py` | `sampler`, `scheduler`, `lightning` (True/False), `steps_lightning`, `steps_full`, `note` |
+| `minimax_ref2v.py` | `sampler`, `scheduler`, `lightning` (True/False), `steps_lightning`, `steps_full`, `note` |
+| `minimax_fl2v.py` | same as ref2v, plus `lightning_strength` |
 
 Keys are model filenames. Matching also accepts the name without the extension. The lookup lives in `skills/_shared/comfy_cloud.py` (`find_preset`), so a new tool can reuse it.
 

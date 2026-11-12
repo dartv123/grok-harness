@@ -39,6 +39,7 @@ python3 /home/workdir/grok-harness/skills/minimax-fl2v/scripts/minimax_fl2v.py \
 | `--megapixels M` | 0.2 | Frame size. Larger is slower and costs more |
 | `--seed N` | random | Always reported; reuse it to reproduce or tweak a clip |
 | `--no-lightning` | lightning on | Turns off the 8-step turbo LoRA and uses 20 steps. Slower. Same as `--lightning off` (`--lightning on` forces it on) |
+| `--lightning-strength S` | 1.0 | Turbo LoRA strength, 0 to 2. Only when the user asks. Ignored with lightning off |
 | `--lora "file.safetensors:0.8"` | none | Model-only LoRA. Repeat to stack; they apply in the order given. Strength defaults to 1.0 |
 | `--steps N` | 8 (20 without lightning) | Override the step count. Only when the user asks |
 | `--sampler NAME` / `--scheduler NAME` | `res_multistep` / `simple` | Override the sampler or scheduler. Only when the user asks |

@@ -24,7 +24,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import comfy_cloud as cc  # noqa: E402
 from comfy_cloud import Fail, emit  # noqa: E402
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 OUT_SUBDIR = "minimax-fl2v"  # default --out: see comfy_cloud.default_out()
 
 # ---------------------------------------------------------------- baked config
@@ -34,6 +34,7 @@ TEXT_ENCODER = "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors"
 VIDEO_VAE = "minimax_h3_video_vae_fp16.safetensors"
 AUDIO_VAE = "minimax_h3_audio_vae_fp32.safetensors"
 LIGHTNING_LORA = "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors"
+LIGHTNING_STRENGTH = 1.0
 STEPS_FULL, STEPS_LIGHTNING = 20, 8
 SAMPLER, SCHEDULER = "res_multistep", "simple"
 FPS = 24
@@ -50,13 +51,14 @@ PROMPT_FIELDS = ("integrated_multimodal_description:", "overall_soundscape:", "n
 # also accepts the name without extension. Any subset of:
 #   sampler, scheduler       KSamplerSelect / BasicScheduler names
 #   lightning                True/False: default state of the turbo LoRA
+#   lightning_strength       turbo LoRA strength (baked: LIGHTNING_STRENGTH)
 #   steps_lightning          steps when lightning is on  (baked: STEPS_LIGHTNING)
 #   steps_full               steps when lightning is off (baked: STEPS_FULL)
 #   note                     free text shown by --list-presets
 MODEL_PRESETS = {
     # "some_h3_fl2va_build.safetensors": {"lightning": False, "steps_full": 24, "note": "..."},
 }
-PRESET_FIELDS = ("sampler", "scheduler", "lightning", "steps_lightning", "steps_full")
+PRESET_FIELDS = ("sampler", "scheduler", "lightning", "lightning_strength", "steps_lightning", "steps_full")
 
 # kind -> [(node class, input field)], first one present in /api/object_info wins
 LIST_KINDS = {
@@ -103,7 +105,7 @@ def build_graph(a):
     # Model chain: turbo LoRA (if on), then --lora in the order given. Guider and scheduler
     # share it, as in the source graph's If/Else switch.
     model = ["unet", 0]
-    chain = ([("lightning", LIGHTNING_LORA, 1.0)] if a.lightning else []) + \
+    chain = ([("lightning", LIGHTNING_LORA, a.lightning_strength_used)] if a.lightning else []) + \
         [(f"lora_{i}", n, s) for i, (n, s) in enumerate(a.loras)]
     for nid, name, strength in chain:
         g[nid] = {"class_type": "LoraLoaderModelOnly",
@@ -168,6 +170,9 @@ def build_parser():
                         f"off = {STEPS_FULL} steps, slower")
     p.add_argument("--no-lightning", dest="lightning", action="store_const", const="off",
                    help="same as --lightning off")
+    p.add_argument("--lightning-strength", type=float, default=None, metavar="S",
+                   help=f"turbo LoRA strength, 0..2 (default {LIGHTNING_STRENGTH:g} or the model's preset); "
+                        f"ignored when lightning is off")
     p.add_argument("--steps", type=int, default=None,
                    help=f"override steps (default {STEPS_LIGHTNING} with lightning, {STEPS_FULL} without, "
                         f"or the model's preset)")
@@ -265,6 +270,8 @@ def validate(args, parser):
         parser.error(f"--duration must be {MIN_DURATION:g}..{MAX_DURATION:g} seconds")
     if not 0.1 <= args.megapixels <= 2.0:
         parser.error("--megapixels must be 0.1..2.0")
+    if args.lightning_strength is not None and not 0 <= args.lightning_strength <= 2:
+        parser.error("--lightning-strength must be 0..2")
     if args.steps is not None and not 1 <= args.steps <= 60:
         parser.error("--steps must be 1..60")
     if args.seed is None:
@@ -295,12 +302,17 @@ def resolve_sampling(args):
     else:
         default_steps = p.get("steps_full", STEPS_FULL)
     args.steps_used = args.steps or default_steps
+    args.lightning_strength_used = (args.lightning_strength if args.lightning_strength is not None
+                                    else p.get("lightning_strength", LIGHTNING_STRENGTH))
     args.sampler_used = args.sampler or p.get("sampler", SAMPLER)
     args.scheduler_used = args.scheduler or p.get("scheduler", SCHEDULER)
 
 
 def sampling_line(args):
-    light = " (lightning)" if args.lightning else ""
+    light = ""
+    if args.lightning:
+        s = args.lightning_strength_used
+        light = " (lightning)" if s == LIGHTNING_STRENGTH else f" (lightning {s:g})"
     src = " (preset)" if args.preset else ""
     return f"{args.steps_used} steps{light}, {args.sampler_used}/{args.scheduler_used}{src}"
 
