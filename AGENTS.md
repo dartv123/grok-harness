@@ -25,6 +25,7 @@ Then open the `SKILL.md` for the task at hand.
 |---|---|
 | [`anima-cloud`](skills/anima-cloud/SKILL.md) | Anime/illustration images from text prompts (Anima model on Comfy Cloud) |
 | [`minimax-ref2v`](skills/minimax-ref2v/SKILL.md) | Short video clips with audio from reference images and/or reference videos for motion, camera and sound (MiniMax H3 Ref2VA on Comfy Cloud) |
+| [`minimax-fl2v`](skills/minimax-fl2v/SKILL.md) | Short video clips with audio that start on one image and land on another, or animate a single first or last frame (MiniMax H3 FL2VA on Comfy Cloud) |
 
 ## Rules
 

@@ -11,6 +11,7 @@ Tool-specific things (graph, flags, result block) stay in each tool.
 """
 import argparse
 import json
+import mimetypes
 import os
 import re
 import shlex
@@ -19,6 +20,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 
 DEFAULT_BASE_URL = "https://cloud.comfy.org"
 KEY_ENV_VARS = ("COMFY_API_KEY", "COMFYUI_API_KEY")
@@ -361,6 +363,35 @@ def print_names(kind, names, flt, cap=12):
         print(f"  {n}")
     if len(names) > cap:
         print(f"  ... +{len(names) - cap} more (use --filter)")
+
+
+# ---------------------------------------------------------------- uploads
+def multipart(fields, file_field, filename, content, ctype):
+    boundary = uuid.uuid4().hex
+    out = []
+    for k, v in fields.items():
+        out.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
+    out.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{file_field}"; '
+               f'filename="{filename}"\r\nContent-Type: {ctype}\r\n\r\n'.encode())
+    out.append(content)
+    out.append(f"\r\n--{boundary}--\r\n".encode())
+    return b"".join(out), f"multipart/form-data; boundary={boundary}"
+
+
+def upload_file(api, path):
+    """Upload one local image or video to the account's input folder; return the name the
+    loader node needs (LoadImage / VHS_LoadVideo). Videos use the same endpoint as images."""
+    with open(path, "rb") as f:
+        content = f.read()
+    filename = re.sub(r"[^A-Za-z0-9._-]+", "_", os.path.basename(path))
+    ctype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+    body, header = multipart({"type": "input", "overwrite": "true"}, "image", filename,
+                             content, ctype)
+    code, _, raw = api.request("POST", "/api/upload/image", raw=body, ctype=header, timeout=300)
+    data = api.parse(code, raw, "POST", "/api/upload/image", ok=(200, 201))
+    name = data.get("name") or filename
+    sub = data.get("subfolder")
+    return f"{sub}/{name}" if sub else name
 
 
 # ---------------------------------------------------------------- model presets

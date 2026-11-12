@@ -10,13 +10,11 @@ Exit codes: 0 completed | 1 job failed/cancelled or workflow rejected (HTTP 400)
 """
 import argparse
 import json
-import mimetypes
 import os
 import random
 import re
 import sys
 import time
-import uuid
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "_shared"))
 import comfy_cloud as cc  # noqa: E402
@@ -167,40 +165,12 @@ def build_graph(a):
 
 
 # ---------------------------------------------------------------- uploads
-def multipart(fields, file_field, filename, content, ctype):
-    boundary = uuid.uuid4().hex
-    out = []
-    for k, v in fields.items():
-        out.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
-    out.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{file_field}"; '
-               f'filename="{filename}"\r\nContent-Type: {ctype}\r\n\r\n'.encode())
-    out.append(content)
-    out.append(f"\r\n--{boundary}--\r\n".encode())
-    return b"".join(out), f"multipart/form-data; boundary={boundary}"
-
-
-def upload_file(api, path):
-    """Upload one local image or video to the account's input folder; return the name the
-    loader node needs. Videos go through the same endpoint as images."""
-    with open(path, "rb") as f:
-        content = f.read()
-    filename = re.sub(r"[^A-Za-z0-9._-]+", "_", os.path.basename(path))
-    ctype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-    body, header = multipart({"type": "input", "overwrite": "true"}, "image", filename,
-                             content, ctype)
-    code, _, raw = api.request("POST", "/api/upload/image", raw=body, ctype=header, timeout=300)
-    data = api.parse(code, raw, "POST", "/api/upload/image", ok=(200, 201))
-    name = data.get("name") or filename
-    sub = data.get("subfolder")
-    return f"{sub}/{name}" if sub else name
-
-
 def resolve_refs(api, refs, kind):
     """Local files are uploaded; a bare name that is not a local file is taken as already on Cloud."""
     names = []
     for ref in refs:
         if os.path.isfile(ref):
-            names.append(upload_file(api, ref))
+            names.append(cc.upload_file(api, ref))
         elif os.sep not in ref and "/" not in ref:
             print(f"warning: {ref} is not a local file; using it as a name already on Cloud")
             names.append(ref)
