@@ -49,6 +49,7 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 | `--sampler NAME` / `--scheduler NAME` | `res_multistep` / `simple` | Override the sampler or scheduler. Only when the user asks |
 | `--ckpt NAME` | baked model | Override the diffusion model (exact filename; `--list-models model` shows what is on the account) |
 | `--out DIR` | see AGENTS.md | Output folder (default: the `minimax-ref2v` subfolder; see "Output folder" in AGENTS.md) |
+| `--key-file PATH` | env var | File holding the Comfy Cloud API key, when the user keeps it in a file instead of `COMFY_API_KEY` (see AGENTS.md rule 3) |
 
 **If the user wants the reference video's own sound in the result, use `--video-audio both`** (or `passthrough`). With the default `ref` the model generates new audio and does not copy the track, even when the prompt says `fully_copy`. The output keeps the track from video 1's start, so match `--duration` to the clip.
 

@@ -30,6 +30,7 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py --p
 | `--steps N` / `--cfg X` | 20 / 2 | Override steps or CFG. Only when the user asks |
 | `--sampler NAME` / `--scheduler NAME` | `er_sde` / `simple` | Override the sampler or scheduler (`--list-models sampler` / `scheduler`). Only when the user asks |
 | `--out DIR` | see AGENTS.md | Output folder (default: the `anima` subfolder; see "Output folder" in AGENTS.md) |
+| `--key-file PATH` | env var | File holding the Comfy Cloud API key, when the user keeps it in a file instead of `COMFY_API_KEY` (see AGENTS.md rule 3) |
 
 Images of 2 MP or more (for example 1536×1536) automatically use a high-res aesthetic LoRA. You don't need to do anything for this.
 
