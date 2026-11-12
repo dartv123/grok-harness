@@ -26,9 +26,11 @@ python3 /home/workdir/grok-harness/skills/minimax-fl2v/scripts/minimax_fl2v.py \
 
 - **`--first`** is the frame the clip starts on, and **`--last`** the frame it lands on. Png, jpg or webp, up to 25 MB; local files are uploaded for you. **Don't swap them**; that is the most common silent failure.
 - **The mode follows the frames given:** both is **fl2va** (Picture 1 = first, Picture 2 = last), `--first` only is **i2va**, and `--last` only is **l2va** (the single frame is Picture 1). At least one is required.
+- **Same image for `--first` and `--last`** makes a loop: the clip leaves the picture and comes back to it exactly. Use it when the user wants a clip that starts and ends on one picture.
 - **The clip takes its size and aspect ratio from the first frame** (the last frame when there's no first), scaled to `--megapixels`.
 - **The prompt is sent exactly as written.** The tool refuses it (exit 3, nothing submitted) when a field is missing, it mentions a Picture with no matching frame, or its landing time doesn't match `--duration` (`--force-prompt` skips these checks).
 - **Before submitting an fl2va job, check the pair:** same person, same place, compatible framing and light. If they're unrelated, tell the user it will morph and suggest `minimax-ref2v` instead (see the prompting guide).
+- **Cheapest settings:** lightning on (the default), `--megapixels 0.1`, and the shortest `--duration` that fits the action. Use them when the user asks to keep it cheap or for a quick test.
 - **A clip takes a minute or more.** The tool returns within about 30 seconds with `status: pending` and a `next:` command; run it until it completes (see AGENTS.md).
 
 | Flag | Default | Meaning |
