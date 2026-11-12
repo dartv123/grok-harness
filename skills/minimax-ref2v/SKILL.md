@@ -54,6 +54,18 @@ Lightning is a fast pass and can be sloppy on identity and cadence. If the perso
 
 **Model presets.** Some models need their own sampler, scheduler, steps or lightning setting. Those are stored in the tool and apply automatically when `--ckpt` (or the default model) matches, so don't pass sampling flags to compensate for a model. The `sampling:` result line ends in `(preset)` when one was used. `--list-presets` shows them. Explicit flags still win, and `--no-preset` ignores the preset; use either only when the user asks.
 
+## Models
+
+Use the default unless the user asks for a different model. These are confirmed to work with `--ckpt` (exact filename; the `.safetensors` extension can be left off):
+
+| Model (`--ckpt`) | |
+|---|---|
+| `TenStrip__10Eros-Max__10Eros_Max_h3_8stepTURBO_beta6_int8.safetensors` | Default |
+| `TenStrip__10Eros-Max__10Eros_Max_h3_8stepTURBO_beta7_int8HQ.safetensors` | |
+| `TenStrip__10Eros-Max__10Eros_Max_h3_TURBO-hybrid_beta5_int8.safetensors` | |
+| `10erosMaxInt8Ref2va_v11.safetensors` | |
+| `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | |
+
 ## Finding LoRA and model names
 
 ```bash

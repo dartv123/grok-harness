@@ -33,7 +33,15 @@ Images of 2 MP or more (for example 1536×1536) automatically use a high-res aes
 
 ## Custom checkpoints and diffusion models
 
-`--ckpt` loads a different model instead of the variant default (`divingAnima_v90.safetensors`). It accepts any model on the account, either a diffusion model (loaded with `UNETLoader`) or a full checkpoint (`CheckpointLoaderSimple`); the loader is picked automatically from which list the file is in.
+`--ckpt` loads a different model instead of the variant default (`divingAnima_v90.safetensors`). Use the default unless the user asks for another model or a style one of these is known for.
+
+| Model (`--ckpt`) | Use for |
+|---|---|
+| `divingAnima_v90.safetensors` | Default |
+| `silvermoonmixAnimaEvolved_v23.safetensors` | Silvermoon Mix Anima Evolved v2.3 |
+| `real-dream-v5-anima-bf16.safetensors` | A more photoreal look |
+
+These three are confirmed to work. `--ckpt` also accepts any other model on the account, either a diffusion model (loaded with `UNETLoader`) or a full checkpoint (`CheckpointLoaderSimple`); the loader is picked automatically from which list the file is in.
 
 ```bash
 python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py \

@@ -45,7 +45,7 @@ All three load with `UNETLoader`. Partial names work (`--ckpt silvermoon`). Clou
 
 Pass the exact filename (the `.safetensors` extension may be left off). Unlike anima-cloud, no partial-name lookup is done.
 
-Sampling settings for a model that needs its own go in `MODEL_PRESETS` (next section). None are defined yet.
+Both lists are repeated in each skill's SKILL.md for the agent; update both when they change. Sampling settings for a model that needs its own go in `MODEL_PRESETS` (next section). None are defined yet.
 
 ### Model presets (both skills)
 
