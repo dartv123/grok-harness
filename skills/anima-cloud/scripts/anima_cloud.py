@@ -125,8 +125,8 @@ def build_parser():
     p = cc.Parser(prog="anima_cloud", description=__doc__,
                   formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--prompt", help="positive prompt (tags)")
-    p.add_argument("--negative", default=None, help="negative prompt (default: baked)")
-    p.add_argument("--no-quality", action="store_true", help="skip the baked quality prefix")
+    p.add_argument("--negative", default=None, help="negative prompt (default: empty)")
+    p.add_argument("--no-quality", action="store_true", help=argparse.SUPPRESS)  # no-op while QUALITY_PREFIX is empty
     p.add_argument("--variant", default=DEFAULT_VARIANT, choices=sorted(VARIANTS))
     p.add_argument("--ckpt", "--model", dest="ckpt", metavar="NAME", default=None,
                    help="override the model file: any diffusion model / checkpoint on Cloud; "
