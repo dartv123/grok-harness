@@ -21,17 +21,31 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 | `anima-cloud` | `base` variant (divingAnima v9.0, 20 steps, CFG 2). `--ckpt` swaps in any other Anima model / checkpoint on the account |
 | `minimax-ref2v` | MiniMax H3 reference-to-video with audio. Up to 5 reference images and up to 3 reference videos (uploaded by the tool; a video's soundtrack becomes `<Audio N>`, and `--video-audio passthrough|both` puts it into the output 1:1), 5–15 s at 24 fps, stackable `--lora`, lightning LoRA on by default (`--no-lightning` for 8 steps). No separate audio files |
 
-### Models known to work with `--ckpt`
+### Compatible models (`--ckpt`)
 
-| File | Loader | Notes |
-|---|---|---|
-| `silvermoonmixAnimaEvolved_v23.safetensors` | `UNETLoader` | Silvermoon Mix Anima Evolved v2.3 |
-| `divingAnima_v90.safetensors` | `UNETLoader` | variant default |
-| `real-dream-v5-anima-bf16.safetensors` | `UNETLoader` | photoreal-leaning Anima build |
+**anima-cloud**
 
-Any other diffusion model or checkpoint on the account also works, including partial names — check with `--list-models model --filter <text>`.
+| File | Notes |
+|---|---|
+| `divingAnima_v90.safetensors` | Default (`base` variant) |
+| `silvermoonmixAnimaEvolved_v23.safetensors` | Silvermoon Mix Anima Evolved v2.3 |
+| `real-dream-v5-anima-bf16.safetensors` | Photoreal-leaning Anima build |
 
-Cloud's `/api/object_info` does not list every imported model (the three above are missing from it), so `--ckpt` submits an unknown name as-is and lets the job decide; `--loader unet|ckpt` forces the loader if `auto` guesses wrong.
+All three load with `UNETLoader`. Partial names work (`--ckpt silvermoon`). Cloud's `/api/object_info` does not list every imported model (these three are missing from it), so `--ckpt` submits an unknown name as-is and lets the job decide; `--loader unet|ckpt` forces the loader if `auto` guesses wrong. Other models on the account may work too; check with `--list-models model --filter <text>`.
+
+**minimax-ref2v**
+
+| File | Notes |
+|---|---|
+| `TenStrip__10Eros-Max__10Eros_Max_h3_8stepTURBO_beta6_int8.safetensors` | Default |
+| `TenStrip__10Eros-Max__10Eros_Max_h3_8stepTURBO_beta7_int8HQ.safetensors` | |
+| `TenStrip__10Eros-Max__10Eros_Max_h3_TURBO-hybrid_beta5_int8.safetensors` | |
+| `10erosMaxInt8Ref2va_v11.safetensors` | |
+| `minimax_h3_ref2va_pruned_int8_convrot.safetensors` | |
+
+Pass the exact filename (the `.safetensors` extension may be left off). Unlike anima-cloud, no partial-name lookup is done.
+
+Sampling settings for a model that needs its own go in `MODEL_PRESETS` (next section). None are defined yet.
 
 ### Model presets (both skills)
 
