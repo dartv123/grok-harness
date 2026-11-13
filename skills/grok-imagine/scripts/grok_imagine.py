@@ -5,9 +5,16 @@ Uploads the reference images, submits the job, downloads the images. Python 3.10
 stdlib only (plus skills/_shared/comfy_cloud.py from this repo). Prints a short
 `key: value` block.
 
-Text-only prompts work: the node needs at least one image input, so blank EmptyImage
-nodes fill the gap. A custom --aspect is only honoured with 2+ image inputs, so a
-blank is added for that too.
+The default is grok-imagine-image-2.0 at quality low. Text-only prompts use
+GrokImageNode: no image inputs and no blank EmptyImage nodes, and its --aspect auto
+means 1:1 (that node has no auto). With --ref it uses GrokImageEditNodeV2, also
+without blanks, and a custom --aspect works with a single reference image.
+
+The older models (grok-imagine-image-quality, grok-imagine-image,
+grok-imagine-image-pro) still need at least one image input, so blank EmptyImage
+nodes fill the gap. A custom --aspect there is only honoured with 2+ image inputs,
+so a blank is added for that too. xAI retired -quality and -pro: they now run as
+grok-imagine-image-2.0 at low quality.
 
 Exit codes: 0 completed | 1 job failed/cancelled or workflow rejected (HTTP 400)
             2 network/server/stall error | 3 usage, key, credits or auth error
@@ -24,7 +31,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."
 import comfy_cloud as cc  # noqa: E402
 from comfy_cloud import Fail, emit  # noqa: E402
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 OUT_SUBDIR = "grok-imagine"  # default --out: see comfy_cloud.default_out()
 
 # ---------------------------------------------------------------- baked config
@@ -33,28 +40,41 @@ ASPECTS = ("auto", "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9",
            "9:19.5", "19.5:9", "9:20", "20:9", "1:2", "2:1")
 RESOLUTIONS = ("1K", "2K")
 QUALITIES = ("medium", "low")
-DEFAULT_MODEL = "grok-imagine-image-quality"
+DEFAULT_MODEL = "grok-imagine-image-2.0"
 DEFAULT_ASPECT = "auto"
 DEFAULT_RESOLUTION = "1K"
-DEFAULT_QUALITY = "medium"
+DEFAULT_QUALITY = "low"
 MAX_COUNT = 10
 MAX_SEED = 2147483647
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
 # Limits from the node's per-model specs. max_images = the images autogrow cap,
-# aspect = has model.aspect_ratio, quality = allowed model.quality (none but 2.0).
+# aspect = has model.aspect_ratio, quality = allowed model.quality (none but 2.0),
+# blank_for_aspect = blanks may be added to fill the image inputs (2.0 needs none).
 MODELS = {
-    "grok-imagine-image-quality": {"max_images": 3, "aspect": True, "quality": ()},
-    "grok-imagine-image-2.0": {"max_images": 3, "aspect": True, "quality": QUALITIES},
-    "grok-imagine-image": {"max_images": 3, "aspect": True, "quality": ()},
-    "grok-imagine-image-pro": {"max_images": 1, "aspect": False, "quality": ()},
+    "grok-imagine-image-quality": {"max_images": 3, "aspect": True, "quality": (),
+                                   "blank_for_aspect": True,
+                                   "note": "retired: runs as 2.0 low"},
+    "grok-imagine-image-2.0": {"max_images": 3, "aspect": True, "quality": QUALITIES,
+                               "blank_for_aspect": False, "note": "default"},
+    "grok-imagine-image": {"max_images": 3, "aspect": True, "quality": (),
+                           "blank_for_aspect": True, "note": ""},
+    "grok-imagine-image-pro": {"max_images": 1, "aspect": False, "quality": (),
+                               "blank_for_aspect": True,
+                               "note": "retired: runs as 2.0 low"},
 }
 MAX_REFS = max(spec["max_images"] for spec in MODELS.values())
 
 
 def dummy_count(args):
-    """Blank EmptyImages needed: 1 image input minimum, 2 when --aspect is not auto."""
+    """Blank EmptyImages needed: 1 image input minimum, 2 when --aspect is not auto.
+
+    grok-imagine-image-2.0 needs none: text-only prompts use GrokImageNode and the
+    edit node takes its aspect with a single reference image.
+    """
+    if not MODELS[args.model]["blank_for_aspect"]:
+        return 0
     need = 1 if args.aspect == "auto" else 2
     return max(0, need - len(args.refs))
 
@@ -62,28 +82,40 @@ def dummy_count(args):
 # ---------------------------------------------------------------- graph
 def build_graph(a):
     g = {}
-    images = []
-    for i, name in enumerate(a.ref_names):
-        g[f"ref_{i}"] = {"class_type": "LoadImage", "inputs": {"image": name}}
-        images.append(f"ref_{i}")
-    for i in range(a.dummies):
-        g[f"dummy_{i}"] = {"class_type": "EmptyImage",
-                           "inputs": {"width": 512, "height": 512, "batch_size": 1, "color": 0}}
-        images.append(f"dummy_{i}")
-
     spec = MODELS[a.model]
-    inputs = {"prompt": a.prompt_text,
-              "seed": a.seed,
-              "model": a.model,
-              "model.resolution": a.resolution,
-              "model.number_of_images": a.count}
-    if spec["aspect"]:
-        inputs["model.aspect_ratio"] = a.aspect
-    if spec["quality"]:
-        inputs["model.quality"] = a.quality_used
-    for i, nid in enumerate(images):
-        inputs[f"model.images.image_{i + 1}"] = [nid, 0]
-    g["grok"] = {"class_type": "GrokImageEditNodeV2", "inputs": inputs}
+    if a.model == "grok-imagine-image-2.0" and not a.ref_names:
+        # Text-to-image: GrokImageNode has flat (non-combo) inputs and no images.
+        inputs = {"model": a.model,
+                  "prompt": a.prompt_text,
+                  "aspect_ratio": a.aspect_sent,
+                  "number_of_images": a.count,
+                  "seed": a.seed,
+                  "resolution": a.resolution}
+        if spec["quality"]:
+            inputs["quality"] = a.quality_used
+        g["grok"] = {"class_type": "GrokImageNode", "inputs": inputs}
+    else:
+        images = []
+        for i, name in enumerate(a.ref_names):
+            g[f"ref_{i}"] = {"class_type": "LoadImage", "inputs": {"image": name}}
+            images.append(f"ref_{i}")
+        for i in range(a.dummies):
+            g[f"dummy_{i}"] = {"class_type": "EmptyImage",
+                               "inputs": {"width": 512, "height": 512, "batch_size": 1, "color": 0}}
+            images.append(f"dummy_{i}")
+
+        inputs = {"prompt": a.prompt_text,
+                  "seed": a.seed,
+                  "model": a.model,
+                  "model.resolution": a.resolution,
+                  "model.number_of_images": a.count}
+        if spec["aspect"]:
+            inputs["model.aspect_ratio"] = a.aspect_sent
+        if spec["quality"]:
+            inputs["model.quality"] = a.quality_used
+        for i, nid in enumerate(images):
+            inputs[f"model.images.image_{i + 1}"] = [nid, 0]
+        g["grok"] = {"class_type": "GrokImageEditNodeV2", "inputs": inputs}
     g["save"] = {"class_type": "SaveImage",
                  "inputs": {"filename_prefix": a.prefix, "images": ["grok", 0]}}
     return g
@@ -115,14 +147,18 @@ def build_parser():
                         f"in the order given. A local file is uploaded; a bare name is used as "
                         f"a name already on Cloud")
     p.add_argument("--model", choices=tuple(MODELS), default=DEFAULT_MODEL,
-                   help=f"Grok Imagine model (default {DEFAULT_MODEL}); --list-models for limits")
+                   help=f"Grok Imagine model (default {DEFAULT_MODEL}); text-only 2.0 "
+                        f"prompts need no blanks, older models add them; --list-models "
+                        f"for limits")
     p.add_argument("--aspect", choices=ASPECTS, default=DEFAULT_ASPECT,
-                   help=f"output aspect ratio (default {DEFAULT_ASPECT}); a ratio other than "
-                        f"auto needs 2 image inputs, so one blank is added when needed")
+                   help=f"output aspect ratio (default {DEFAULT_ASPECT}); for a "
+                        f"text-only {DEFAULT_MODEL} run auto means 1:1; older models need "
+                        f"2 image inputs for a ratio other than auto, so one blank is "
+                        f"added when needed")
     p.add_argument("--resolution", choices=RESOLUTIONS, default=DEFAULT_RESOLUTION,
                    help=f"output resolution (default {DEFAULT_RESOLUTION})")
     p.add_argument("--quality", choices=QUALITIES, default=None,
-                   help=f"quality level; grok-imagine-image-2.0 only "
+                   help=f"quality level; {DEFAULT_MODEL} only "
                         f"(default {DEFAULT_QUALITY} for that model)")
     p.add_argument("--count", type=int, default=1,
                    help=f"number of images, 1..{MAX_COUNT} (default 1)")
@@ -176,6 +212,10 @@ def validate(args, parser):
     if args.quality is not None and not spec["quality"]:
         parser.error(f"{args.model} has no --quality")
     args.quality_used = (args.quality or DEFAULT_QUALITY) if spec["quality"] else None
+    # GrokImageNode has no 'auto': a text-only 2.0 job sends (and reports) 1:1.
+    args.aspect_sent = args.aspect
+    if args.model == "grok-imagine-image-2.0" and not args.refs and args.aspect == "auto":
+        args.aspect_sent = "1:1"
     args.dummies = dummy_count(args)
     total = len(args.refs) + args.dummies
     if total > spec["max_images"]:
@@ -199,15 +239,15 @@ def validate(args, parser):
 
 def print_models():
     print(f"models: {len(MODELS)} (default {DEFAULT_MODEL})")
-    print(f"  {'model':<28} {'refs':>4}  {'aspect':<6}  quality")
+    print(f"  {'model':<28} {'refs':>4}  {'aspect':<6}  {'quality':<11}  note")
     for name, spec in MODELS.items():
         quality = ", ".join(spec["quality"]) or "no"
         print(f"  {name:<28} {spec['max_images']:>4}  "
-              f"{'yes' if spec['aspect'] else 'no':<6}  {quality}")
+              f"{'yes' if spec['aspect'] else 'no':<6}  {quality:<11}  {spec['note'] or '-'}")
 
 
 def result_line(args):
-    line = (f"{args.model}, {args.aspect}, {args.resolution}, {args.count} image(s), "
+    line = (f"{args.model}, {args.aspect_sent}, {args.resolution}, {args.count} image(s), "
             f"{len(args.refs)} ref(s)")
     if args.quality_used:
         line += f", quality {args.quality_used}"

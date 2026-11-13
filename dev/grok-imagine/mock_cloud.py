@@ -14,37 +14,52 @@ JOBS, UPLOADS = {}, {}
 PNG = b"\x89PNG\r\n\x1a\n" + b"x" * 100
 TEST_KEY = "sk-test-1234"
 MODELS = {
-    "grok-imagine-image-quality": {"max": 3, "aspect": True, "quality": False},
-    "grok-imagine-image-2.0": {"max": 3, "aspect": True, "quality": True},
-    "grok-imagine-image": {"max": 3, "aspect": True, "quality": False},
-    "grok-imagine-image-pro": {"max": 1, "aspect": False, "quality": False},
+    "grok-imagine-image-quality": {"max": 3, "aspect": True, "quality": False,
+                                   "blank": True},
+    "grok-imagine-image-2.0": {"max": 3, "aspect": True, "quality": True,
+                               "blank": False},
+    "grok-imagine-image": {"max": 3, "aspect": True, "quality": False, "blank": True},
+    "grok-imagine-image-pro": {"max": 1, "aspect": False, "quality": False, "blank": True},
 }
 ASPECTS = {"auto", "1:1", "2:3", "3:2", "3:4", "4:3", "9:16", "16:9",
            "9:19.5", "19.5:9", "9:20", "20:9", "1:2", "2:1"}
 
 
-def check_graph(g):
-    """Return a list of problems; empty means the graph looks right."""
+def check_text_graph(g, inp, model, spec):
+    """Problems with a GrokImageNode (text-only) graph; flat input names, no images."""
     bad = []
-    groks = [nid for nid, n in g.items() if n["class_type"] == "GrokImageEditNodeV2"]
-    if len(groks) != 1:
-        return ["expected exactly one GrokImageEditNodeV2"]
-    grok_id = groks[0]
-    inp = g[grok_id]["inputs"]
-    model = inp.get("model")
-    spec = MODELS.get(model)
-    if not spec:
-        return [f"unknown model {model!r}"]
-    if not isinstance(inp.get("prompt"), str) or not inp["prompt"].strip():
-        bad.append("empty prompt")
+    if inp.get("resolution") not in ("1K", "2K"):
+        bad.append(f"resolution {inp.get('resolution')!r} is not 1K/2K")
+    n = inp.get("number_of_images")
+    if not isinstance(n, int) or not 1 <= n <= 10:
+        bad.append(f"number_of_images {n!r} is not 1..10")
+    if "aspect_ratio" not in inp:
+        bad.append("GrokImageNode needs aspect_ratio")
+    elif inp["aspect_ratio"] not in ASPECTS - {"auto"}:
+        bad.append(f"bad aspect_ratio {inp['aspect_ratio']!r}")
+    if "quality" in inp:
+        quality = inp["quality"]
+        if not spec["quality"]:
+            bad.append(f"{model} has no quality")
+        elif quality not in ("medium", "low"):
+            bad.append(f"bad quality {quality!r}")
+    elif spec["quality"]:
+        bad.append(f"{model} needs quality")
+    if any(k.startswith("model.") for k in inp):
+        bad.append("GrokImageNode takes flat input names, not model.*")
+    if any(n.get("class_type") in ("LoadImage", "EmptyImage") for n in g.values()):
+        bad.append("GrokImageNode graph has LoadImage/EmptyImage nodes")
+    return bad
+
+
+def check_edit_graph(g, inp, model, spec):
+    """Problems with a GrokImageEditNodeV2 graph."""
+    bad = []
     if inp.get("model.resolution") not in ("1K", "2K"):
         bad.append(f"model.resolution {inp.get('model.resolution')!r} is not 1K/2K")
     n = inp.get("model.number_of_images")
     if not isinstance(n, int) or not 1 <= n <= 10:
         bad.append(f"model.number_of_images {n!r} is not 1..10")
-    seed = inp.get("seed")
-    if not isinstance(seed, int) or not 0 <= seed <= 2147483647:
-        bad.append(f"seed {seed!r} is not 0..2147483647")
 
     slots = {}
     for k, v in inp.items():
@@ -69,7 +84,11 @@ def check_graph(g):
             name = src["inputs"].get("image")
             if name not in UPLOADS.values():
                 bad.append(f"model.images.image_{i} image '{name}' was never uploaded")
-        elif ct != "EmptyImage":
+        elif ct == "EmptyImage":
+            if not spec["blank"]:
+                bad.append(f"model.images.image_{i} is an EmptyImage blank "
+                           f"but {model} needs no blanks")
+        else:
             bad.append(f"model.images.image_{i} comes from {ct}, not LoadImage/EmptyImage")
 
     if "model.aspect_ratio" in inp:
@@ -78,7 +97,7 @@ def check_graph(g):
             bad.append(f"{model} has no model.aspect_ratio")
         elif aspect not in ASPECTS:
             bad.append(f"bad model.aspect_ratio {aspect!r}")
-        elif aspect != "auto" and count < 2:
+        elif aspect != "auto" and count < 2 and spec["blank"]:
             bad.append(f"model.aspect_ratio {aspect} needs at least 2 images (has {count})")
     elif spec["aspect"]:
         bad.append(f"{model} needs model.aspect_ratio")
@@ -90,6 +109,31 @@ def check_graph(g):
             bad.append(f"bad model.quality {quality!r}")
     elif spec["quality"]:
         bad.append(f"{model} needs model.quality")
+    return bad
+
+
+def check_graph(g):
+    """Return a list of problems; empty means the graph looks right."""
+    bad = []
+    groks = [nid for nid, n in g.items()
+             if n["class_type"] in ("GrokImageNode", "GrokImageEditNodeV2")]
+    if len(groks) != 1:
+        return ["expected exactly one GrokImageNode or GrokImageEditNodeV2"]
+    grok_id = groks[0]
+    inp = g[grok_id]["inputs"]
+    model = inp.get("model")
+    spec = MODELS.get(model)
+    if not spec:
+        return [f"unknown model {model!r}"]
+    if not isinstance(inp.get("prompt"), str) or not inp["prompt"].strip():
+        bad.append("empty prompt")
+    seed = inp.get("seed")
+    if not isinstance(seed, int) or not 0 <= seed <= 2147483647:
+        bad.append(f"seed {seed!r} is not 0..2147483647")
+    if g[grok_id]["class_type"] == "GrokImageNode":
+        bad += check_text_graph(g, inp, model, spec)
+    else:
+        bad += check_edit_graph(g, inp, model, spec)
 
     for nid, node in g.items():  # every link must resolve
         for k, v in node["inputs"].items():
@@ -159,9 +203,11 @@ class Api(BaseHTTPRequestHandler):
                 print("BADGRAPH:", "; ".join(problems), file=sys.stderr)
                 return self.send(400, {"error": {"message": "mock: " + "; ".join(problems)}})
             node = next(n for n in body["prompt"].values()
-                        if n["class_type"] == "GrokImageEditNodeV2")
+                        if n["class_type"] in ("GrokImageNode", "GrokImageEditNodeV2"))
+            count_key = ("number_of_images" if node["class_type"] == "GrokImageNode"
+                         else "model.number_of_images")
             pid = str(uuid.uuid4())
-            JOBS[pid] = {"t": time.time(), "count": node["inputs"]["model.number_of_images"]}
+            JOBS[pid] = {"t": time.time(), "count": node["inputs"][count_key]}
             return self.send(200, {"prompt_id": pid, "number": 1, "node_errors": {}})
         if self.path == "/api/queue":
             return self.send(200, {})

@@ -28,7 +28,8 @@ python3 /home/workdir/grok-harness/skills/grok-imagine/scripts/grok_imagine.py \
 ```
 
 - **`--ref`** is a reference image: up to 3 (png, jpg or webp, up to 25 MB), in order image 1, 2, 3. Local files are uploaded for you. Without `--ref` it's text-to-image.
-- **Blank placeholder images are added automatically** where the model needs them (text-only prompts, and custom aspect ratios). Don't create or pass blank images yourself.
+- **Don't create or pass blank images.** The default model needs none. The older models get blank placeholders added automatically where they need them.
+- **Text-only with `--aspect auto` gives a square (1:1) image.** Pass the ratio you want; with `--ref`, `auto` keeps the reference's shape.
 - **Every image costs credits** (this is a paid partner model). `--count` multiplies the cost; keep it at 1 unless the user asks for several.
 - **The seed doesn't make results repeatable.** Grok is nondeterministic; the same prompt and seed give a different image each time.
 - It usually finishes within the 30-second wait. If not, follow the `next:` line (see AGENTS.md).
@@ -40,8 +41,8 @@ python3 /home/workdir/grok-harness/skills/grok-imagine/scripts/grok_imagine.py \
 | `--aspect A` | `auto` | `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `9:16`, `16:9`, `9:19.5`, `19.5:9`, `9:20`, `20:9`, `1:2`, `2:1`, or `auto` |
 | `--resolution 1K\|2K` | `1K` | Output resolution |
 | `--count N` | 1 | 1–10 images in one job. Each one costs credits |
-| `--model NAME` | `grok-imagine-image-quality` | See Models. Only when the user asks |
-| `--quality medium\|low` | `medium` | Only for `grok-imagine-image-2.0` |
+| `--quality medium\|low` | `low` | Higher quality costs more per image. Use `medium` only when the user asks for better quality |
+| `--model NAME` | `grok-imagine-image-2.0` | See Models. Only when the user asks |
 | `--seed N` | random | 0–2147483647. Reported, but doesn't reproduce an image |
 | `--out DIR` | see AGENTS.md | Output folder (default: the `grok-imagine` subfolder; see "Output folder" in AGENTS.md) |
 | `--key-file PATH` | env var | File holding the Comfy Cloud API key, when the user keeps it in a file instead of `COMFY_API_KEY` (see AGENTS.md rule 3) |
@@ -52,17 +53,17 @@ python3 /home/workdir/grok-harness/skills/grok-imagine/scripts/grok_imagine.py \
 
 | Model | Refs | Aspect | Notes |
 |---|---|---|---|
-| `grok-imagine-image-quality` | up to 3 | yes | Default. xAI retired it; Cloud now runs it as 2.0 at low quality |
-| `grok-imagine-image-2.0` | up to 3 | yes | Current model; `--quality medium` (default) or `low` |
-| `grok-imagine-image` | up to 3 | yes | Standard model |
-| `grok-imagine-image-pro` | 1 | no | Retired like `-quality`; no `--aspect` |
+| `grok-imagine-image-2.0` | up to 3 | yes | Default. `--quality low` (default) or `medium`. No blank images needed |
+| `grok-imagine-image` | up to 3 | yes | Older standard model; gets blank placeholders |
+| `grok-imagine-image-quality` | up to 3 | yes | Retired by xAI on 2026-11-02; runs as 2.0 at low quality |
+| `grok-imagine-image-pro` | 1 | no | Retired; runs as 2.0 at low quality; no `--aspect` |
 
 ## Example result
 
 ```
 status: completed
 path: /workspace/artifacts/grok-imagine/grok_261113-233000_s402267919.png
-image: grok-imagine-image-quality, 2:3, 1K, 1 image(s), 0 ref(s)
+image: grok-imagine-image-2.0, 2:3, 1K, 1 image(s), 0 ref(s), quality low
 seed: 402267919
 prompt_id: 1234abcd-...
 ```
