@@ -1,0 +1,1497 @@
+{
+ "GrokImageNode": {
+  "input": {
+   "required": {
+    "model": [
+     "COMBO",
+     {
+      "tooltip": "grok-imagine-image-quality and grok-imagine-image-pro are retired by xAI and now run as grok-imagine-image-2.0 at low quality.",
+      "multiselect": false,
+      "options": [
+       "grok-imagine-image-2.0",
+       "grok-imagine-image-quality",
+       "grok-imagine-image-pro",
+       "grok-imagine-image"
+      ]
+     }
+    ],
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "The text prompt used to generate the image",
+      "multiline": true
+     }
+    ],
+    "aspect_ratio": [
+     "COMBO",
+     {
+      "multiselect": false,
+      "options": [
+       "1:1",
+       "2:3",
+       "3:2",
+       "3:4",
+       "4:3",
+       "9:16",
+       "16:9",
+       "9:19.5",
+       "19.5:9",
+       "9:20",
+       "20:9",
+       "1:2",
+       "2:1"
+      ]
+     }
+    ],
+    "number_of_images": [
+     "INT",
+     {
+      "tooltip": "Number of images to generate",
+      "default": 1,
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "display": "number"
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "optional": {
+    "resolution": [
+     "COMBO",
+     {
+      "multiselect": false,
+      "options": [
+       "1K",
+       "2K"
+      ]
+     }
+    ],
+    "quality": [
+     "COMBO",
+     {
+      "tooltip": "Quality level, supported only by the grok-imagine-image-2.0 model.",
+      "multiselect": false,
+      "options": [
+       "medium",
+       "low"
+      ]
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "model",
+    "prompt",
+    "aspect_ratio",
+    "number_of_images",
+    "seed"
+   ],
+   "optional": [
+    "resolution",
+    "quality"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "IMAGE"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "IMAGE"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokImageNode",
+  "display_name": "Grok Image",
+  "description": "Generate images using Grok based on a text prompt",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/image/Grok",
+  "output_node": false,
+  "deprecated": false,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [
+     {
+      "name": "model",
+      "type": "COMBO"
+     },
+     {
+      "name": "number_of_images",
+      "type": "INT"
+     },
+     {
+      "name": "resolution",
+      "type": "COMBO"
+     },
+     {
+      "name": "quality",
+      "type": "COMBO"
+     }
+    ],
+    "inputs": [],
+    "input_groups": []
+   },
+   "expr": "\n                (\n                  $is1k := widgets.resolution = \"1k\";\n                  $rate := widgets.model = \"grok-imagine-image-2.0\"\n                    ? (widgets.quality = \"low\" ? ($is1k ? 0.04 : 0.06) : ($is1k ? 0.06 : 0.08))\n                    : (widgets.model = \"grok-imagine-image\" ? 0.02 : ($is1k ? 0.04 : 0.06));\n                  {\"type\":\"usd\",\"usd\": $rate * widgets.number_of_images}\n                )\n                "
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ },
+ "GrokImageEditNode": {
+  "input": {
+   "required": {
+    "model": [
+     "COMBO",
+     {
+      "tooltip": "grok-imagine-image-quality and grok-imagine-image-pro are retired by xAI and now run as grok-imagine-image-2.0 at low quality.",
+      "multiselect": false,
+      "options": [
+       "grok-imagine-image-quality",
+       "grok-imagine-image-pro",
+       "grok-imagine-image"
+      ]
+     }
+    ],
+    "image": [
+     "IMAGE",
+     {
+      "display_name": "images"
+     }
+    ],
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "The text prompt used to generate the image",
+      "multiline": true
+     }
+    ],
+    "resolution": [
+     "COMBO",
+     {
+      "multiselect": false,
+      "options": [
+       "1K",
+       "2K"
+      ]
+     }
+    ],
+    "number_of_images": [
+     "INT",
+     {
+      "tooltip": "Number of edited images to generate",
+      "default": 1,
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "display": "number"
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "optional": {
+    "aspect_ratio": [
+     "COMBO",
+     {
+      "tooltip": "Only allowed when multiple images are connected to the image input.",
+      "multiselect": false,
+      "options": [
+       "auto",
+       "1:1",
+       "2:3",
+       "3:2",
+       "3:4",
+       "4:3",
+       "9:16",
+       "16:9",
+       "9:19.5",
+       "19.5:9",
+       "9:20",
+       "20:9",
+       "1:2",
+       "2:1"
+      ]
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "model",
+    "image",
+    "prompt",
+    "resolution",
+    "number_of_images",
+    "seed"
+   ],
+   "optional": [
+    "aspect_ratio"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "IMAGE"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "IMAGE"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokImageEditNode",
+  "display_name": "Grok Image Edit",
+  "description": "Modify an existing image based on a text prompt",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/image/Grok",
+  "output_node": false,
+  "deprecated": true,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [
+     {
+      "name": "model",
+      "type": "COMBO"
+     },
+     {
+      "name": "number_of_images",
+      "type": "INT"
+     },
+     {
+      "name": "resolution",
+      "type": "COMBO"
+     }
+    ],
+    "inputs": [],
+    "input_groups": []
+   },
+   "expr": "\n                (\n                  $is10 := widgets.model = \"grok-imagine-image\";\n                  $isPro := $contains(widgets.model, \"pro\");\n                  $rate := $is10 ? 0.02 : (widgets.resolution = \"1k\" ? 0.04 : 0.06);\n                  $base := $is10 ? 0.002 : 0.01;\n                  $output := $rate * widgets.number_of_images;\n                  $isPro\n                    ? {\"type\":\"usd\",\"usd\": $base + $output}\n                    : {\"type\":\"range_usd\",\"min_usd\": $base + $output, \"max_usd\": 3 * $base + $output}\n                )\n                "
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ },
+ "GrokImageEditNodeV2": {
+  "input": {
+   "required": {
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "The text prompt used to generate the image",
+      "default": "",
+      "multiline": true
+     }
+    ],
+    "model": [
+     "COMFY_DYNAMICCOMBO_V3",
+     {
+      "tooltip": "grok-imagine-image-quality and grok-imagine-image-pro are retired by xAI and now run as grok-imagine-image-2.0 at low quality.",
+      "options": [
+       {
+        "key": "grok-imagine-image-2.0",
+        "inputs": {
+         "required": {
+          "images": [
+           "COMFY_AUTOGROW_V3",
+           {
+            "tooltip": "Reference image(s) to edit. Up to 3 images.",
+            "template": {
+             "input": {
+              "required": {
+               "image": [
+                "IMAGE",
+                {}
+               ]
+              }
+             },
+             "names": [
+              "image_1",
+              "image_2",
+              "image_3"
+             ],
+             "min": 1
+            }
+           }
+          ],
+          "resolution": [
+           "COMBO",
+           {
+            "multiselect": false,
+            "options": [
+             "1K",
+             "2K"
+            ]
+           }
+          ],
+          "number_of_images": [
+           "INT",
+           {
+            "tooltip": "Number of edited images to generate",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "display": "number"
+           }
+          ],
+          "quality": [
+           "COMBO",
+           {
+            "multiselect": false,
+            "options": [
+             "medium",
+             "low"
+            ]
+           }
+          ],
+          "aspect_ratio": [
+           "COMBO",
+           {
+            "tooltip": "Aspect ratio of the edited image.",
+            "multiselect": false,
+            "options": [
+             "auto",
+             "1:1",
+             "2:3",
+             "3:2",
+             "3:4",
+             "4:3",
+             "9:16",
+             "16:9",
+             "9:19.5",
+             "19.5:9",
+             "9:20",
+             "20:9",
+             "1:2",
+             "2:1"
+            ]
+           }
+          ]
+         }
+        }
+       },
+       {
+        "key": "grok-imagine-image-quality",
+        "inputs": {
+         "required": {
+          "images": [
+           "COMFY_AUTOGROW_V3",
+           {
+            "tooltip": "Reference image(s) to edit. Up to 3 images.",
+            "template": {
+             "input": {
+              "required": {
+               "image": [
+                "IMAGE",
+                {}
+               ]
+              }
+             },
+             "names": [
+              "image_1",
+              "image_2",
+              "image_3"
+             ],
+             "min": 1
+            }
+           }
+          ],
+          "resolution": [
+           "COMBO",
+           {
+            "multiselect": false,
+            "options": [
+             "1K",
+             "2K"
+            ]
+           }
+          ],
+          "number_of_images": [
+           "INT",
+           {
+            "tooltip": "Number of edited images to generate",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "display": "number"
+           }
+          ],
+          "aspect_ratio": [
+           "COMBO",
+           {
+            "tooltip": "Aspect ratio of the edited image.",
+            "multiselect": false,
+            "options": [
+             "auto",
+             "1:1",
+             "2:3",
+             "3:2",
+             "3:4",
+             "4:3",
+             "9:16",
+             "16:9",
+             "9:19.5",
+             "19.5:9",
+             "9:20",
+             "20:9",
+             "1:2",
+             "2:1"
+            ]
+           }
+          ]
+         }
+        }
+       },
+       {
+        "key": "grok-imagine-image-pro",
+        "inputs": {
+         "required": {
+          "images": [
+           "COMFY_AUTOGROW_V3",
+           {
+            "tooltip": "Reference image to edit.",
+            "template": {
+             "input": {
+              "required": {
+               "image": [
+                "IMAGE",
+                {}
+               ]
+              }
+             },
+             "names": [
+              "image_1"
+             ],
+             "min": 1
+            }
+           }
+          ],
+          "resolution": [
+           "COMBO",
+           {
+            "multiselect": false,
+            "options": [
+             "1K",
+             "2K"
+            ]
+           }
+          ],
+          "number_of_images": [
+           "INT",
+           {
+            "tooltip": "Number of edited images to generate",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "display": "number"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "key": "grok-imagine-image",
+        "inputs": {
+         "required": {
+          "images": [
+           "COMFY_AUTOGROW_V3",
+           {
+            "tooltip": "Reference image(s) to edit. Up to 3 images.",
+            "template": {
+             "input": {
+              "required": {
+               "image": [
+                "IMAGE",
+                {}
+               ]
+              }
+             },
+             "names": [
+              "image_1",
+              "image_2",
+              "image_3"
+             ],
+             "min": 1
+            }
+           }
+          ],
+          "resolution": [
+           "COMBO",
+           {
+            "multiselect": false,
+            "options": [
+             "1K",
+             "2K"
+            ]
+           }
+          ],
+          "number_of_images": [
+           "INT",
+           {
+            "tooltip": "Number of edited images to generate",
+            "default": 1,
+            "min": 1,
+            "max": 10,
+            "step": 1,
+            "display": "number"
+           }
+          ],
+          "aspect_ratio": [
+           "COMBO",
+           {
+            "tooltip": "Only allowed when multiple images are connected.",
+            "multiselect": false,
+            "options": [
+             "auto",
+             "1:1",
+             "2:3",
+             "3:2",
+             "3:4",
+             "4:3",
+             "9:16",
+             "16:9",
+             "9:19.5",
+             "19.5:9",
+             "9:20",
+             "20:9",
+             "1:2",
+             "2:1"
+            ]
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "prompt",
+    "model",
+    "seed"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "IMAGE"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "IMAGE"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokImageEditNodeV2",
+  "display_name": "Grok Image Edit",
+  "description": "Modify an existing image based on a text prompt",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/image/Grok",
+  "output_node": false,
+  "deprecated": false,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [
+     {
+      "name": "model",
+      "type": "COMFY_DYNAMICCOMBO_V3"
+     },
+     {
+      "name": "model.resolution",
+      "type": "COMBO"
+     },
+     {
+      "name": "model.number_of_images",
+      "type": "INT"
+     },
+     {
+      "name": "model.quality",
+      "type": "COMBO"
+     }
+    ],
+    "inputs": [],
+    "input_groups": []
+   },
+   "expr": "\n                (\n                  $is10 := widgets.model = \"grok-imagine-image\";\n                  $is20 := widgets.model = \"grok-imagine-image-2.0\";\n                  $isPro := $contains(widgets.model, \"pro\");\n                  $res := $lookup(widgets, \"model.resolution\");\n                  $n := $lookup(widgets, \"model.number_of_images\");\n                  $is1k := $res = \"1k\";\n                  $rate := $is20\n                    ? ($lookup(widgets, \"model.quality\") = \"low\"\n                        ? ($is1k ? 0.04 : 0.06)\n                        : ($is1k ? 0.06 : 0.08))\n                    : ($is10 ? 0.02 : ($is1k ? 0.04 : 0.06));\n                  $base := $is10 ? 0.002 : 0.01;\n                  $output := $rate * $n;\n                  $isPro\n                    ? {\"type\":\"usd\",\"usd\": $base + $output}\n                    : {\"type\":\"range_usd\",\"min_usd\": $base + $output, \"max_usd\": 3 * $base + $output}\n                )\n                "
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ },
+ "GrokVideoNode": {
+  "input": {
+   "required": {
+    "model": [
+     "COMBO",
+     {
+      "tooltip": "The model to use for video generation.",
+      "default": "grok-imagine-video-1.5-lite",
+      "multiselect": false,
+      "options": [
+       "grok-imagine-video",
+       "grok-imagine-video-1.5",
+       "grok-imagine-video-1.5-lite"
+      ]
+     }
+    ],
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "Text description of the desired video. Optional for the grok-imagine-video-1.5 models when an input image is provided.",
+      "multiline": true
+     }
+    ],
+    "resolution": [
+     "COMBO",
+     {
+      "tooltip": "The resolution of the output video. 1080p is not available for grok-imagine-video.",
+      "multiselect": false,
+      "options": [
+       "480p",
+       "720p",
+       "1080p"
+      ]
+     }
+    ],
+    "aspect_ratio": [
+     "COMBO",
+     {
+      "tooltip": "The aspect ratio of the output video. Ignored when an input image is provided; the video follows the image's aspect ratio.",
+      "multiselect": false,
+      "options": [
+       "auto",
+       "16:9",
+       "4:3",
+       "3:2",
+       "1:1",
+       "2:3",
+       "3:4",
+       "9:16"
+      ]
+     }
+    ],
+    "duration": [
+     "INT",
+     {
+      "tooltip": "The duration of the output video in seconds.",
+      "default": 6,
+      "min": 1,
+      "max": 15,
+      "step": 1,
+      "display": "slider"
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "optional": {
+    "image": [
+     "IMAGE",
+     {
+      "tooltip": "Optional starting image. If omitted, the video is generated from the text prompt alone."
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "model",
+    "prompt",
+    "resolution",
+    "aspect_ratio",
+    "duration",
+    "seed"
+   ],
+   "optional": [
+    "image"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "VIDEO"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "VIDEO"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokVideoNode",
+  "display_name": "Grok Video",
+  "description": "Generate video from a prompt or an image",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/video/Grok",
+  "output_node": false,
+  "deprecated": false,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [
+     {
+      "name": "model",
+      "type": "COMBO"
+     },
+     {
+      "name": "duration",
+      "type": "INT"
+     },
+     {
+      "name": "resolution",
+      "type": "COMBO"
+     }
+    ],
+    "inputs": [
+     "image"
+    ],
+    "input_groups": []
+   },
+   "expr": "\n                (\n                  $isLite := widgets.model = \"grok-imagine-video-1.5-lite\";\n                  $is15 := $contains(widgets.model, \"1.5\");\n                  $rate := $isLite\n                    ? (widgets.resolution = \"1080p\" ? 0.14 : (widgets.resolution = \"720p\" ? 0.03 : 0.02))\n                    : ($is15\n                        ? (widgets.resolution = \"1080p\" ? 0.25 : (widgets.resolution = \"720p\" ? 0.14 : 0.08))\n                        : (widgets.resolution = \"720p\" ? 0.07 : 0.05));\n                  $imgCost := $is15 ? 0.01 : 0.002;\n                  $base := $rate * widgets.duration;\n                  $total := inputs.image.connected ? $base + $imgCost : $base;\n                  {\"type\":\"usd\",\"usd\": $is15 ? $total * 1.43 : $total}\n                )\n                "
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ },
+ "GrokVideoReferenceNode": {
+  "input": {
+   "required": {
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "Text description of the desired video.",
+      "multiline": true
+     }
+    ],
+    "model": [
+     "COMFY_DYNAMICCOMBO_V3",
+     {
+      "tooltip": "The model to use for video generation.",
+      "options": [
+       {
+        "key": "grok-imagine-video-1.5",
+        "inputs": {
+         "required": {
+          "reference_images": [
+           "COMFY_AUTOGROW_V3",
+           {
+            "tooltip": "Up to 7 reference images to guide the video generation. Refer to them in the prompt as @Image1 ... @Image7, numbered in input order; a batched input counts once per image.",
+            "template": {
+             "input": {
+              "required": {
+               "image": [
+                "IMAGE",
+                {}
+               ]
+              }
+             },
+             "names": [
+              "reference_1",
+              "reference_2",
+              "reference_3",
+              "reference_4",
+              "reference_5",
+              "reference_6",
+              "reference_7"
+             ],
+             "min": 1
+            }
+           }
+          ],
+          "voice_1": [
+           "COMBO",
+           {
+            "tooltip": "Optional preset voice reference; refer to it in the prompt as @Audio1. The API supports only these preset voices, not custom audio.",
+            "multiselect": false,
+            "options": [
+             "none",
+             "ara",
+             "eve",
+             "leo",
+             "rex",
+             "sal",
+             "carina",
+             "zagan",
+             "helix",
+             "orion",
+             "luna",
+             "iris",
+             "altair",
+             "zenith",
+             "perseus",
+             "helios",
+             "lux",
+             "kepler",
+             "rigel",
+             "cosmo",
+             "celeste",
+             "ursa",
+             "sirius",
+             "lumen",
+             "castor",
+             "naksh",
+             "atlas"
+            ]
+           }
+          ],
+          "voice_2": [
+           "COMBO",
+           {
+            "tooltip": "Optional second voice reference; @Audio2 in the prompt.",
+            "multiselect": false,
+            "options": [
+             "none",
+             "ara",
+             "eve",
+             "leo",
+             "rex",
+             "sal",
+             "carina",
+             "zagan",
+             "helix",
+             "orion",
+             "luna",
+             "iris",
+             "altair",
+             "zenith",
+             "perseus",
+             "helios",
+             "lux",
+             "kepler",
+             "rigel",
+             "cosmo",
+             "celeste",
+             "ursa",
+             "sirius",
+             "lumen",
+             "castor",
+             "naksh",
+             "atlas"
+            ]
+           }
+          ],
+          "voice_3": [
+           "COMBO",
+           {
+            "tooltip": "Optional third voice reference; @Audio3 in the prompt.",
+            "multiselect": false,
+            "options": [
+             "none",
+             "ara",
+             "eve",
+             "leo",
+             "rex",
+             "sal",
+             "carina",
+             "zagan",
+             "helix",
+             "orion",
+             "luna",
+             "iris",
+             "altair",
+             "zenith",
+             "perseus",
+             "helios",
+             "lux",
+             "kepler",
+             "rigel",
+             "cosmo",
+             "celeste",
+             "ursa",
+             "sirius",
+             "lumen",
+             "castor",
+             "naksh",
+             "atlas"
+            ]
+           }
+          ],
+          "resolution": [
+           "COMBO",
+           {
+            "tooltip": "The resolution of the output video.",
+            "multiselect": false,
+            "options": [
+             "480p",
+             "720p"
+            ]
+           }
+          ],
+          "aspect_ratio": [
+           "COMBO",
+           {
+            "tooltip": "The aspect ratio of the output video.",
+            "multiselect": false,
+            "options": [
+             "16:9",
+             "4:3",
+             "3:2",
+             "1:1",
+             "2:3",
+             "3:4",
+             "9:16"
+            ]
+           }
+          ],
+          "duration": [
+           "INT",
+           {
+            "tooltip": "The duration of the output video in seconds.",
+            "default": 6,
+            "min": 1,
+            "max": 15,
+            "step": 1,
+            "display": "slider"
+           }
+          ]
+         }
+        }
+       },
+       {
+        "key": "grok-imagine-video",
+        "inputs": {
+         "required": {
+          "reference_images": [
+           "COMFY_AUTOGROW_V3",
+           {
+            "tooltip": "Up to 7 reference images to guide the video generation.",
+            "template": {
+             "input": {
+              "required": {
+               "image": [
+                "IMAGE",
+                {}
+               ]
+              }
+             },
+             "prefix": "reference_",
+             "min": 1,
+             "max": 7
+            }
+           }
+          ],
+          "resolution": [
+           "COMBO",
+           {
+            "tooltip": "The resolution of the output video.",
+            "multiselect": false,
+            "options": [
+             "480p",
+             "720p"
+            ]
+           }
+          ],
+          "aspect_ratio": [
+           "COMBO",
+           {
+            "tooltip": "The aspect ratio of the output video.",
+            "multiselect": false,
+            "options": [
+             "16:9",
+             "4:3",
+             "3:2",
+             "1:1",
+             "2:3",
+             "3:4",
+             "9:16"
+            ]
+           }
+          ],
+          "duration": [
+           "INT",
+           {
+            "tooltip": "The duration of the output video in seconds.",
+            "default": 6,
+            "min": 2,
+            "max": 10,
+            "step": 1,
+            "display": "slider"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "prompt",
+    "model",
+    "seed"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "VIDEO"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "VIDEO"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokVideoReferenceNode",
+  "display_name": "Grok Reference-to-Video",
+  "description": "Generate video guided by reference images, with optional preset voice references.",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/video/Grok",
+  "output_node": false,
+  "deprecated": false,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [
+     {
+      "name": "model",
+      "type": "COMFY_DYNAMICCOMBO_V3"
+     },
+     {
+      "name": "model.duration",
+      "type": "INT"
+     },
+     {
+      "name": "model.resolution",
+      "type": "COMBO"
+     }
+    ],
+    "inputs": [],
+    "input_groups": [
+     "model.reference_images"
+    ]
+   },
+   "expr": "\n                (\n                  $is15 := $contains(widgets.model, \"1.5\");\n                  $res := $lookup(widgets, \"model.resolution\");\n                  $dur := $lookup(widgets, \"model.duration\");\n                  $refs := $lookup(inputGroups, \"model.reference_images\");\n                  $rate := $is15\n                    ? ($res = \"720p\" ? 0.14 : 0.08)\n                    : ($res = \"720p\" ? 0.07 : 0.05);\n                  $imgCost := $is15 ? 0.01 : 0.002;\n                  $price := ($rate * $dur + $imgCost * $refs) * 1.43;\n                  {\"type\":\"usd\",\"usd\": $price}\n                )\n                "
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ },
+ "GrokVideoEditNode": {
+  "input": {
+   "required": {
+    "model": [
+     "COMBO",
+     {
+      "multiselect": false,
+      "options": [
+       "grok-imagine-video"
+      ]
+     }
+    ],
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "Text description of the desired video.",
+      "multiline": true
+     }
+    ],
+    "video": [
+     "VIDEO",
+     {
+      "tooltip": "Maximum supported duration is 8.7 seconds and 50MB file size."
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "model",
+    "prompt",
+    "video",
+    "seed"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "VIDEO"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "VIDEO"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokVideoEditNode",
+  "display_name": "Grok Video Edit",
+  "description": "Edit an existing video based on a text prompt.",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/video/Grok",
+  "output_node": false,
+  "deprecated": false,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [],
+    "inputs": [],
+    "input_groups": []
+   },
+   "expr": "{\"type\":\"usd\",\"usd\": 0.06, \"format\": {\"suffix\": \"/sec\", \"approximate\": true}}"
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ },
+ "GrokVideoExtendNode": {
+  "input": {
+   "required": {
+    "prompt": [
+     "STRING",
+     {
+      "tooltip": "Text description of what should happen next in the video.",
+      "multiline": true
+     }
+    ],
+    "video": [
+     "VIDEO",
+     {
+      "tooltip": "Source video to extend. MP4 format, 2-15 seconds."
+     }
+    ],
+    "model": [
+     "COMFY_DYNAMICCOMBO_V3",
+     {
+      "tooltip": "The model to use for video extension.",
+      "options": [
+       {
+        "key": "grok-imagine-video",
+        "inputs": {
+         "required": {
+          "duration": [
+           "INT",
+           {
+            "tooltip": "Length of the extension in seconds.",
+            "default": 8,
+            "min": 2,
+            "max": 10,
+            "step": 1,
+            "display": "slider"
+           }
+          ]
+         }
+        }
+       }
+      ]
+     }
+    ],
+    "seed": [
+     "INT",
+     {
+      "tooltip": "Seed to determine if node should re-run; actual results are nondeterministic regardless of seed.",
+      "default": 0,
+      "min": 0,
+      "max": 2147483647,
+      "step": 1,
+      "control_after_generate": true,
+      "display": "number"
+     }
+    ]
+   },
+   "hidden": {
+    "auth_token_comfy_org": [
+     "AUTH_TOKEN_COMFY_ORG"
+    ],
+    "api_key_comfy_org": [
+     "API_KEY_COMFY_ORG"
+    ],
+    "unique_id": [
+     "UNIQUE_ID"
+    ],
+    "comfy_usage_source": [
+     "COMFY_USAGE_SOURCE"
+    ]
+   }
+  },
+  "input_order": {
+   "required": [
+    "prompt",
+    "video",
+    "model",
+    "seed"
+   ],
+   "hidden": [
+    "auth_token_comfy_org",
+    "api_key_comfy_org",
+    "unique_id",
+    "comfy_usage_source"
+   ]
+  },
+  "is_input_list": false,
+  "output": [
+   "VIDEO"
+  ],
+  "output_is_list": [
+   false
+  ],
+  "output_name": [
+   "VIDEO"
+  ],
+  "output_tooltips": [
+   null
+  ],
+  "output_matchtypes": null,
+  "name": "GrokVideoExtendNode",
+  "display_name": "Grok Video Extend",
+  "description": "Extend an existing video with a seamless continuation based on a text prompt.",
+  "python_module": "comfy_api_nodes.nodes_grok",
+  "category": "partner/video/Grok",
+  "output_node": false,
+  "deprecated": false,
+  "experimental": false,
+  "dev_only": false,
+  "api_node": true,
+  "price_badge": {
+   "engine": "jsonata",
+   "depends_on": {
+    "widgets": [
+     {
+      "name": "model.duration",
+      "type": "INT"
+     }
+    ],
+    "inputs": [],
+    "input_groups": []
+   },
+   "expr": "\n                (\n                  $dur := $lookup(widgets, \"model.duration\");\n                  {\n                    \"type\": \"range_usd\",\n                    \"min_usd\": (0.02 + 0.05 * $dur) * 1.43,\n                    \"max_usd\": (0.15 + 0.05 * $dur) * 1.43\n                  }\n                )\n                "
+  },
+  "search_aliases": null,
+  "essentials_category": null,
+  "has_intermediate_output": false
+ }
+}

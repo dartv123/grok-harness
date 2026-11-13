@@ -21,6 +21,7 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 | `anima-cloud` | `base` variant (divingAnima v9.0, 20 steps, CFG 2). `--ckpt` swaps in any other Anima model / checkpoint on the account |
 | `minimax-ref2v` | MiniMax H3 reference-to-video with audio. Up to 5 reference images and up to 3 reference videos (uploaded by the tool; a video's soundtrack becomes `<Audio N>`, and `--video-audio passthrough|both` puts it into the output 1:1), 5–15 s at 24 fps, stackable `--lora`, lightning LoRA on by default (`--no-lightning` for 8 steps). No separate audio files |
 | `minimax-fl2v` | MiniMax H3 first-and-last-frame to video with audio. `--first` + `--last` (fl2va), or one frame alone (i2va / l2va); 4–15 s at 24 fps, size from the first frame, 8-step turbo LoRA on by default (`--no-lightning` for 20 steps). Checks the prompt's fields, Picture labels and landing time before submitting |
+| `grok-imagine` | xAI Grok Imagine images through Comfy's `GrokImageEditNodeV2` partner node. Text-to-image or edit with up to 3 `--ref` images; blank `EmptyImage` placeholders are added automatically (at least 1 image always, at least 2 for a custom `--aspect`). Default model `grok-imagine-image-quality`. Paid per image; the Comfy key is also sent as `extra_data.api_key_comfy_org` |
 
 ### Compatible models (`--ckpt`)
 
@@ -114,3 +115,13 @@ COMFY_API_KEY=sk-test-1234 COMFY_CLOUD_URL=http://127.0.0.1:18140 \
 ```
 
 Like the ref2v mock, it prints `BADGRAPH:` for a miswired graph. The source workflow and the original prompting guide it was adapted from are in `dev/minimax-fl2v/`.
+
+## Testing grok-imagine locally
+
+```bash
+python3 dev/grok-imagine/mock_cloud.py 18160 18161 ok &   # modes: ok | fail | slow | badnode | badupload
+COMFY_API_KEY=sk-test-1234 COMFY_CLOUD_URL=http://127.0.0.1:18160 \
+  python3 skills/grok-imagine/scripts/grok_imagine.py --prompt "a red fox" --aspect 16:9 --out /tmp/grok-test
+```
+
+The mock also rejects a job without the partner key in `extra_data`. `dev/grok-imagine/` holds the source workflow, Cloud's specs for all Grok nodes (`object_info_grok.json`, including the video ones for later) and the original prompting skill.

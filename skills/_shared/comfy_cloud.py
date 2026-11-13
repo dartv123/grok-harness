@@ -246,9 +246,17 @@ def job_failure_reason(detail, st):
     return short(st.get("error_message") or "no error detail from API")
 
 
-def submit(api, graph):
-    """POST the graph; return the prompt_id. Rejections exit 1, anything odd exits 2."""
-    resp = api.json("POST", "/api/prompt", body={"prompt": graph})
+def submit(api, graph, partner=False):
+    """POST the graph; return the prompt_id. Rejections exit 1, anything odd exits 2.
+
+    partner=True also sends the Comfy API key in the body as
+    extra_data.api_key_comfy_org, which partner (API) nodes such as Grok read from
+    their hidden api_key_comfy_org input. The key is never sent any other way.
+    """
+    body = {"prompt": graph}
+    if partner:
+        body["extra_data"] = {"api_key_comfy_org": api.key}
+    resp = api.json("POST", "/api/prompt", body=body)
     pid = resp.get("prompt_id")
     if not pid:
         raise Fail("error", f"submit: no prompt_id ({summarize_error(resp)})", 2)

@@ -1,0 +1,58 @@
+{
+  "3": {
+    "inputs": {
+      "filename_prefix": "grok_20261113_HH1716",
+      "images": [
+        "16",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "5": {
+    "inputs": {
+      "image": "a831f478c4b136346b2e8250ac3a814522badb6d252d0043e120b08846041e5e.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "16": {
+    "inputs": {
+      "prompt": "",
+      "model": "grok-imagine-image-quality",
+      "model.resolution": "1K",
+      "model.number_of_images": 1,
+      "model.aspect_ratio": "auto",
+      "seed": 0,
+      "model.images.image_1": [
+        "5",
+        0
+      ],
+      "model.images.image_2": [
+        "17",
+        0
+      ]
+    },
+    "class_type": "GrokImageEditNodeV2",
+    "_meta": {
+      "title": "Grok Image Edit"
+    }
+  },
+  "17": {
+    "inputs": {
+      "width": 512,
+      "height": 512,
+      "batch_size": 1,
+      "color": 0
+    },
+    "class_type": "EmptyImage",
+    "_meta": {
+      "title": "Empty Image"
+    }
+  }
+}
