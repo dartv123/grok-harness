@@ -2,3 +2,7 @@ __pycache__/
 *.pyc
 out/
 artifacts/
+
+# graft's local code index: regenerable (`graft build`), not committed.
+/graft/
+/.ignore
