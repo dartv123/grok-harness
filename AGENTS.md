@@ -32,7 +32,7 @@ Then open the `SKILL.md` for the task at hand.
 
 1. **Tools are black boxes.** Don't read, unpack, modify or debug scripts (including `skills/_shared/`) or anything under `dev/` unless the user explicitly asks. Run the documented commands and act on the output.
 2. **Every submission costs credits.** Submit once per user request. Never resubmit to get around a pending, stalled or failed job. Don't try variations the user didn't ask for.
-3. **Secrets.** The tools read the API key from `COMFY_API_KEY` or `COMFYUI_API_KEY`, from `--key-file PATH`, or (in Grok's sandbox only) `/home/workdir/.grok/secrets/comfy_api_key`. The user tells you which applies. If none is set up, ask the user. Don't search the filesystem for keys. Never print, echo, log or paste a key, including in commands you show.
+3. **Secrets.** The tools read the API key from `COMFY_API_KEY` or `COMFYUI_API_KEY`, from `--key-file PATH`, or (in Grok's sandbox only) `/home/workdir/.grok/secrets/comfy_api_key`. **Outside Grok's sandbox, the key is in `~/.comfy_api_key`: add `--key-file ~/.comfy_api_key` to every command** (including the `next:` / `--resume` ones, which keep it for you), unless the user says otherwise. If none of these is set up, ask the user. Don't search the filesystem for keys. Never print, echo, log or paste a key, including in commands you show.
 4. **Showing results.** When a run completes, show the user every file listed in `path:` or `paths:`. Those paths are absolute and always correct. Use them as printed and don't guess the location. See "Output folder" below.
 
 ## Output folder
