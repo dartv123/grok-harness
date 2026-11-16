@@ -53,6 +53,14 @@ python3 /home/workdir/grok-harness/skills/minimax-fl2v/scripts/minimax_fl2v.py \
 
 When the user says a clip looks wrong (teleports, morphs, misses the last frame), check [references/failures.md](references/failures.md) and suggest a fix instead of resubmitting on your own.
 
+## Model and inference notes
+
+- **Pipeline:** MiniMax H3 FL2VA generates video and stereo audio in one pass, interpolating a path between the frames. The text encoder is Qwen3-VL 32B. Sampling uses no CFG (a basic guider), so there's no CFG lever; fix a bad path in the prompt or the frame pair, not with sampling settings.
+- **Frames:** output is locked at 24 fps, and the length snaps to a 17-frame grid (5 s = 124 frames, 8 s = 192). The model range is 4 to 15 s; 5 to 8 s works best.
+- **Size:** both frames are scaled to `--megapixels` in steps of 32 px; the clip takes the first frame's shape (the last frame's in l2va).
+- **Turbo** (the default 8-step LoRA) is the fast pass; `--no-lightning` runs 20 steps.
+- **Models:** the default is the dedicated (vanilla) FL2VA checkpoint. The hybrid H3 builds also handle FL2VA. A Ref2VA-only checkpoint won't follow the alignment-line format.
+
 ## Models
 
 Use the default unless the user asks for a different model.

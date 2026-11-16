@@ -13,7 +13,7 @@ A prompt, and optionally reference images, go in; one or more PNGs come out. For
 
 ## Generate
 
-The prompt style is in [references/prompting.md](references/prompting.md); **read it before writing your first prompt**. Grok wants plain sentences, not tags.
+The prompt style, including how to word edits and composites, is in [references/prompting.md](references/prompting.md); **read it before writing your first prompt**. Grok wants plain sentences, not tags.
 
 ```bash
 python3 /home/workdir/grok-harness/skills/grok-imagine/scripts/grok_imagine.py \
@@ -46,6 +46,13 @@ python3 /home/workdir/grok-harness/skills/grok-imagine/scripts/grok_imagine.py \
 | `--seed N` | random | 0–2147483647. Reported, but doesn't reproduce an image |
 | `--out DIR` | see AGENTS.md | Output folder (default: the `grok-imagine` subfolder; see "Output folder" in AGENTS.md) |
 | `--key-file PATH` | env var | File holding the Comfy Cloud API key, when the user keeps it in a file instead of `COMFY_API_KEY` (see AGENTS.md rule 3) |
+
+## Model and inference notes
+
+- **It runs on xAI's servers, not Comfy's GPUs.** Comfy forwards the job to xAI (a "partner node"), so there are no steps, CFG, sampler or LoRA options, and results are nondeterministic.
+- **Output size:** `1K` at 16:9 is 1280×720; `2K` is larger and costs more.
+- **Editing behavior:** the model keeps whatever the prompt doesn't mention; with several references, the first one sets the shape under `--aspect auto`. See the editing and compositing sections of the prompting guide.
+- **What it's good at:** photoreal and general-purpose images from plain English, and edits of existing pictures. For Danbooru-tag anime art, `anima-cloud` follows tags far more precisely.
 
 ## Models
 

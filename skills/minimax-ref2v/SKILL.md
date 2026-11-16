@@ -13,7 +13,7 @@ Reference images (and optionally reference videos) go in, one MP4 (24 fps, with 
 
 ## Generate
 
-Write the prompt to a file, then run the tool. The prompt format is in [references/prompting.md](references/prompting.md); **read it before writing your first prompt**.
+Write the prompt to a file, then run the tool. The prompt format is in [references/prompting.md](references/prompting.md); **read it before writing your first prompt**. Fill-in prompts for common jobs are in [references/templates.md](references/templates.md), and symptoms with fixes in [references/failures.md](references/failures.md).
 
 ```bash
 cat > /tmp/ref2v_prompt.txt <<'EOF'
@@ -56,6 +56,15 @@ python3 /home/workdir/grok-harness/skills/minimax-ref2v/scripts/minimax_ref2v.py
 Lightning is a fast pass and can be sloppy on identity and cadence. If the person in the clip doesn't match the references, tell the user and offer `--no-lightning` (and `--ref-size max`) instead of resubmitting on your own.
 
 **Model presets.** Some models need their own sampler, scheduler, steps or lightning setting. Those are stored in the tool and apply automatically when `--ckpt` (or the default model) matches, so don't pass sampling flags to compensate for a model. The `sampling:` result line ends in `(preset)` when one was used. `--list-presets` shows them. Explicit flags still win, and `--no-preset` ignores the preset; use either only when the user asks.
+
+## Model and inference notes
+
+- **Pipeline:** MiniMax H3 Ref2VA generates video and stereo audio in one pass. The text encoder is Qwen3-VL 32B; a video VAE and an audio VAE encode the references. Sampling uses no CFG (a basic guider), so there's no CFG lever.
+- **Frames:** output is locked at 24 fps, and the length snaps to a 17-frame grid (5 / 10 / 15 s = 124 / 243 / 362 frames). The trained range is about 5 to 15 s.
+- **References:** MiniMax's official cap is 9 images, but the Comfy node takes 5; a video's soundtrack is the only audio reference. `--ref-size max` encodes stills at up to 2048 px on the short edge: the identity path, and slower.
+- **Cost and time:** a reference video adds tokens to every sampler step, so expect about 2 to 3 times the wall time of a pictures-only run.
+- **Lightning** (the default 4-step LoRA) is a fast draft pass. It's looser on identity and cadence; `--no-lightning` is the lock pass.
+- **Models:** most listed checkpoints are hybrid H3 builds. A first/last-frame-only checkpoint won't follow the six-section format.
 
 ## Models
 

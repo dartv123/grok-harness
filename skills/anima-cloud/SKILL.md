@@ -15,7 +15,7 @@ The commands below use Grok's sandbox path `/home/workdir/grok-harness`. Anywher
 python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py --prompt "<tags>"
 ```
 
-- **The prompt is used exactly as written.** No quality tags or negative prompt are added. Write the full prompt yourself as comma-separated Danbooru-style tags, adding quality tags such as `masterpiece, best quality` if you want them.
+- **The prompt is used exactly as written.** No quality tags or negative prompt are added. Write the full prompt yourself. The prompt rules are in [references/prompting.md](references/prompting.md); **read it before writing your first prompt.** The essentials: lowercase tags with spaces (`long hair`, not `long_hair`), artist tags start with `@`, always include a safety tag (`safe`, `sensitive`, `nsfw` or `explicit`), and name each character before describing them.
 - **It returns within about 30 seconds.** Longer jobs come back as `status: pending` with a `next:` command (see AGENTS.md).
 
 | Flag | Default | Meaning |
@@ -33,6 +33,15 @@ python3 /home/workdir/grok-harness/skills/anima-cloud/scripts/anima_cloud.py --p
 | `--key-file PATH` | env var | File holding the Comfy Cloud API key, when the user keeps it in a file instead of `COMFY_API_KEY` (see AGENTS.md rule 3) |
 
 Images of 2 MP or more (for example 1536×1536) automatically use a high-res aesthetic LoRA. You don't need to do anything for this.
+
+## Model and inference notes
+
+- **What it is:** Anima is a 2B DiT text-to-image model (a fine-tune of NVIDIA Cosmos-Predict2) trained on anime plus some non-anime artwork, with a Qwen3 0.6B text encoder and the Qwen-Image VAE. It is an illustration model: weak at photorealism and at text inside the image.
+- **The default is a community finetune.** `divingAnima_v90` runs at 20 steps, CFG 2, `er_sde`/`simple`. CFG above 1 means **`--negative` takes effect.** (On Anima Turbo-style models at CFG 1 the negative does nothing; put constraints in the prompt instead.)
+- **Size:** about 0.25 to 2.4 megapixels works (512×512 up to 1536×1536); both sides multiples of 16. Good shapes: 1024×1024, 832×1216, 1216×832, 896×1152, 1152×896. At 2 MP and above the high-res aesthetic LoRA switches on automatically.
+- **Samplers,** if the user asks for a different look (`--sampler`): `er_sde` neutral, flat colors, sharp lines (default); `euler_ancestral` softer, thinner lines, can lean 2.5D, tolerates higher CFG; `dpmpp_2m_sde_gpu` like `er_sde` with more variety, can get wild; `euler` slightly more creative.
+- **Troubleshooting** (report to the user; don't resubmit on your own): plain or bland output → add `@artist` and quality tags; burned or oversaturated → lower `--cfg` or try `euler_ancestral`; characters merged → describe each one after naming them.
+- **License:** generated images may be used commercially. Hosting the model itself behind a paid service needs a commercial license from the model's author.
 
 ## Custom checkpoints and diffusion models
 
