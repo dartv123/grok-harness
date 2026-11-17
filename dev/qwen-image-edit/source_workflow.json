@@ -1,0 +1,470 @@
+{
+  "2": {
+    "inputs": {
+      "image": "6b2ec620a783573b0bb1294ca9fdfff3ffa5997b28aacc76360ab92a6c00433c.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "837": {
+    "inputs": {
+      "filename_prefix": "qwen_20261117_HH1107",
+      "images": [
+        "836:8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "838": {
+    "inputs": {
+      "image": "f412d7bac527e219fde634ca53f4b7793b27f9e26bc150040413ed3eb36e0dad.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "836:75": {
+    "inputs": {
+      "strength": 1,
+      "pre_cfg": false,
+      "model": [
+        "836:66",
+        0
+      ]
+    },
+    "class_type": "CFGNorm",
+    "_meta": {
+      "title": "CFGNorm",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.50"
+    }
+  },
+  "836:39": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.48"
+    }
+  },
+  "836:38": {
+    "inputs": {
+      "clip_name": "ethanfel__Qwen25-VL-7B-Huihui-Abliterated-ComfyUI-ConvRot-INT8__qwen_2.5_vl_7b_huihui_abliterated_int8_convrot.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.48"
+    }
+  },
+  "836:37": {
+    "inputs": {
+      "unet_name": "qwen_image_edit_2511_fp8mixed.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.48"
+    }
+  },
+  "836:110": {
+    "inputs": {
+      "prompt": "Plastic skin, 3d",
+      "clip": [
+        "836:819:825",
+        0
+      ],
+      "vae": [
+        "836:819:826",
+        0
+      ],
+      "image1": [
+        "2",
+        0
+      ],
+      "image2": [
+        "838",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "Text Encode Qwen Image Edit Plus",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.59"
+    }
+  },
+  "836:66": {
+    "inputs": {
+      "shift": 3,
+      "sampling": "flow",
+      "model": [
+        "836:728",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.48"
+    }
+  },
+  "836:111": {
+    "inputs": {
+      "prompt": "",
+      "clip": [
+        "836:819:825",
+        0
+      ],
+      "vae": [
+        "836:819:826",
+        0
+      ],
+      "image1": [
+        "2",
+        0
+      ],
+      "image2": [
+        "838",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "Text Encode Qwen Image Edit Plus",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.59"
+    }
+  },
+  "836:88": {
+    "inputs": {
+      "pixels": [
+        "836:835",
+        0
+      ],
+      "vae": [
+        "836:819:826",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.50"
+    }
+  },
+  "836:8": {
+    "inputs": {
+      "samples": [
+        "836:725",
+        0
+      ],
+      "vae": [
+        "836:819:826",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.48"
+    }
+  },
+  "836:89": {
+    "inputs": {
+      "lora_name": "Qwen-Image-Edit-2511-Lightning-8steps-V1.0-fp32.safetensors",
+      "strength_model": 1,
+      "model": [
+        "836:819:823",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.50"
+    }
+  },
+  "836:725": {
+    "inputs": {
+      "seed": 65045929511871,
+      "steps": [
+        "836:436",
+        0
+      ],
+      "cfg": [
+        "836:437",
+        0
+      ],
+      "sampler_name": "euler_ancestral",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "836:75",
+        0
+      ],
+      "positive": [
+        "836:111",
+        0
+      ],
+      "negative": [
+        "836:110",
+        0
+      ],
+      "latent_image": [
+        "836:810",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler",
+      "cnr_id": "comfy-core",
+      "ver": "0.3.48"
+    }
+  },
+  "836:436": {
+    "inputs": {
+      "value": 8
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Stpes"
+    }
+  },
+  "836:437": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "CFG"
+    }
+  },
+  "836:440": {
+    "inputs": {
+      "switch": [
+        "836:443",
+        0
+      ],
+      "on_false": [
+        "836:819:823",
+        0
+      ],
+      "on_true": [
+        "836:89",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Model)"
+    }
+  },
+  "836:443": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Enable Lightning LoRA"
+    }
+  },
+  "836:470": {
+    "inputs": {},
+    "class_type": "FluxKontextImageScale",
+    "_meta": {
+      "title": "FluxKontextImageScale"
+    }
+  },
+  "836:478": {
+    "inputs": {
+      "width": [
+        "836:479",
+        0
+      ],
+      "height": [
+        "836:479",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "836:479": {
+    "inputs": {
+      "aspect_ratio": "2:3 (Portrait Photo)",
+      "megapixels": 1,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "836:728": {
+    "inputs": {
+      "lora_name": "Skin_Fix_rank64.safetensors",
+      "strength_model": 0.7,
+      "model": [
+        "836:440",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "836:809": {
+    "inputs": {
+      "value": true
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Use Empty Latent"
+    }
+  },
+  "836:810": {
+    "inputs": {
+      "switch": [
+        "836:809",
+        0
+      ],
+      "on_false": [
+        "836:88",
+        0
+      ],
+      "on_true": [
+        "836:478",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (CFG)"
+    }
+  },
+  "836:819:813": {
+    "inputs": {
+      "ckpt_name": "Phr00t__Qwen-Image-Edit-Rapid-AIO__Qwen-Rapid-AIO-NSFW-v23.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "836:819:823": {
+    "inputs": {
+      "model_a": [
+        "836:819:813",
+        0
+      ],
+      "model_b": [
+        "836:37",
+        0
+      ],
+      "boolean": [
+        "836:819:827",
+        0
+      ]
+    },
+    "class_type": "Model Input Switch",
+    "_meta": {
+      "title": "Model Input Switch"
+    }
+  },
+  "836:819:825": {
+    "inputs": {
+      "clip_a": [
+        "836:819:813",
+        1
+      ],
+      "clip_b": [
+        "836:38",
+        0
+      ],
+      "boolean": [
+        "836:819:827",
+        0
+      ]
+    },
+    "class_type": "CLIP Input Switch",
+    "_meta": {
+      "title": "CLIP Input Switch"
+    }
+  },
+  "836:819:826": {
+    "inputs": {
+      "vae_a": [
+        "836:819:813",
+        2
+      ],
+      "vae_b": [
+        "836:39",
+        0
+      ],
+      "boolean": [
+        "836:819:827",
+        0
+      ]
+    },
+    "class_type": "VAE Input Switch",
+    "_meta": {
+      "title": "VAE Input Switch"
+    }
+  },
+  "836:819:827": {
+    "inputs": {
+      "value": true
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Boolean"
+    }
+  },
+  "836:835": {
+    "inputs": {
+      "target_width": [
+        "836:479",
+        0
+      ],
+      "target_height": [
+        "836:479",
+        1
+      ],
+      "padding_color": "black",
+      "interpolation": "area",
+      "image": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "ResizeAndPadImage",
+    "_meta": {
+      "title": "Resize And Pad Image"
+    }
+  }
+}

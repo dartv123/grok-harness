@@ -22,6 +22,7 @@ dev/<name>/                    maintainer material; agents are told to ignore it
 | `minimax-ref2v` | MiniMax H3 reference-to-video with audio. Up to 5 reference images and up to 3 reference videos (uploaded by the tool; a video's soundtrack becomes `<Audio N>`, and `--video-audio passthrough|both` puts it into the output 1:1), 5–15 s at 24 fps, stackable `--lora`, lightning LoRA on by default (`--no-lightning` for 8 steps). No separate audio files |
 | `minimax-fl2v` | MiniMax H3 first-and-last-frame to video with audio. `--first` + `--last` (fl2va), or one frame alone (i2va / l2va); 4–15 s at 24 fps, size from the first frame, 8-step turbo LoRA on by default (`--no-lightning` for 20 steps). Checks the prompt's fields, Picture labels and landing time before submitting |
 | `grok-imagine` | xAI Grok Imagine images through Comfy partner nodes. Default `grok-imagine-image-2.0` at quality `low` (xAI retired `-quality` and `-pro` on 2026-11-02; both now run as 2.0-low). Text-only 2.0 uses `GrokImageNode` (no images; `auto` = 1:1); with up to 3 `--ref` images it uses `GrokImageEditNodeV2`. The older models still get blank `EmptyImage` placeholders (at least 1 image, at least 2 for a custom `--aspect`). Paid per image; the Comfy key is also sent as `extra_data.api_key_comfy_org` |
+| `qwen-image-edit` | Qwen-Image-Edit with up to 3 `--ref` images, or text-to-image. Default `--model aio` (Phr00t Rapid AIO v23 checkpoint, 8 steps, CFG 1); `2511`/`2509` are the official fp8 models with an abliterated Qwen2.5-VL encoder and their Lightning 8-step LoRAs. Image 1 is scaled once (`FluxKontextImageScale`) and feeds both the encoders and the `VAEEncode` latent, so edits inherit its size (`--latent empty` forces `--aspect`/`--megapixels`). Skin-fix LoRA at 0.7, AuraFlow shift 3, CFGNorm |
 
 ### Compatible models (`--ckpt`)
 
@@ -125,3 +126,13 @@ COMFY_API_KEY=sk-test-1234 COMFY_CLOUD_URL=http://127.0.0.1:18160 \
 ```
 
 The mock also rejects a job without the partner key in `extra_data`. `dev/grok-imagine/` holds the source workflow, Cloud's specs for all Grok nodes (`object_info_grok.json`, including the video ones for later) and the original prompting skill.
+
+## Testing qwen-image-edit locally
+
+```bash
+python3 dev/qwen-image-edit/mock_cloud.py 18180 18181 ok &   # modes: ok | fail | slow | badnode | badupload
+COMFY_API_KEY=sk-test-1234 COMFY_CLOUD_URL=http://127.0.0.1:18180 \
+  python3 skills/qwen-image-edit/scripts/qwen_image_edit.py --prompt "make it night" --ref photo.png --out /tmp/qwen-test
+```
+
+The mock flags (`BADGRAPH:`) a latent that isn't the same scaled image 1 the encoders see, and partial denoise on an empty latent. `dev/qwen-image-edit/` holds the source workflow, Cloud's specs for the nodes used, and the original 2509 and 2511 prompting skills.

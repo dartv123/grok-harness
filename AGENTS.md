@@ -27,6 +27,7 @@ Then open the `SKILL.md` for the task at hand.
 | [`minimax-ref2v`](skills/minimax-ref2v/SKILL.md) | Short video clips with audio from reference images and/or reference videos for motion, camera and sound (MiniMax H3 Ref2VA on Comfy Cloud) |
 | [`minimax-fl2v`](skills/minimax-fl2v/SKILL.md) | Short video clips with audio that start on one image and land on another, or animate a single first or last frame (MiniMax H3 FL2VA on Comfy Cloud) |
 | [`grok-imagine`](skills/grok-imagine/SKILL.md) | Images from a plain-English prompt, or edits of up to 3 reference images (xAI Grok Imagine on Comfy Cloud; paid per image) |
+| [`qwen-image-edit`](skills/qwen-image-edit/SKILL.md) | Instruction-based edits of 1 to 3 reference images (replace, restyle, restore, recompose, combine people), or text-to-image (Qwen-Image-Edit 2509/2511 or Rapid AIO on Comfy Cloud) |
 
 ## Rules
 
