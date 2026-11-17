@@ -348,7 +348,7 @@ def validate(args, parser):
     if not 0.1 <= args.megapixels <= 4.0:
         parser.error("--megapixels must be 0.1..4.0")
     if args.seed is None:
-        args.seed = random.randint(0, 2**63)
+        args.seed = random.randint(0, 2**50)
     if not 0 <= args.seed < 2**64:
         parser.error("--seed must be 0..2^64-1")
 

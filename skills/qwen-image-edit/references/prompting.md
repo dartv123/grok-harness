@@ -46,6 +46,10 @@ Identify the type first, then apply its pattern.
 | View rotation | Degree and direction | "Rotate the object 180° to show its back view, keeping the same lighting and materials." |
 | Product poster | Positioning plus target background | "Turn this plain product photo into a poster with a soft gradient background and a subtle drop shadow; keep the product unchanged." |
 
+## Which image goes first
+
+The output takes image 1's frame, so **image 1 is the picture whose composition you keep**: the body, outfit, pose or scene. The images that only supply something (a face, an object, a style) come after it. To put the person from a portrait into another photo's body and outfit, pass that photo as image 1 and the portrait as image 2. **The image latent locks image 1's composition.** The prompt can't move the frame: if image 1 crops off the head, the result does too, whatever the prompt says. When the result needs a frame that no reference has (a head the body photo cuts off, a new scene combining several people), use `--latent empty` with an `--aspect` that fits the result (for example `2:3` for head-to-thigh), and describe the framing in the prompt: "The woman from image 2, shown from head to thighs, wearing the outfit from image 1 in the same pose."
+
 ## Text-to-image (no `--ref`)
 
 Without reference images, the tool samples from an empty latent at `--aspect` and `--megapixels`. Then a normal descriptive prompt is fine: subject, setting, light and style, in plain sentences.

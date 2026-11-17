@@ -35,7 +35,7 @@ python3 /home/workdir/grok-harness/skills/qwen-image-edit/scripts/qwen_image_edi
 | `--seed N` | random | Reported; reuse it to reproduce or tweak an image |
 | `--lora "file.safetensors:0.8"` | none | Extra LoRA; repeatable, applied after the skin LoRA |
 | `--skin-lora S` | 0.7 | Strength of the built-in skin-texture LoRA; `0` turns it off |
-| `--latent image\|empty` | `image` | `empty` forces `--aspect`/`--megapixels` even with references. **Only when the user asks for a different output size;** it makes edits less faithful (see notes) |
+| `--latent image\|empty` | `image` | `empty` uses `--aspect`/`--megapixels` even with references. Use it when the result needs a frame image 1 doesn't have (a size change, or a head the body photo crops off: the prompt can't move image 1's frame). Edits are less faithful (see notes) |
 | `--aspect A` / `--megapixels M` | `2:3` / 1.0 | Output shape and size for text-to-image or `--latent empty`: `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `9:16`, `16:9`, `21:9` |
 | `--denoise X` | 1.0 | Below 1 keeps more of image 1 (0.5–0.8 for a light touch). Needs a reference and the image latent |
 | `--steps`, `--cfg`, `--sampler`, `--scheduler`, `--shift` | per model | Only when the user asks |
@@ -59,7 +59,7 @@ Use `aio` unless the user asks for the official models. `--list-models model|ckp
 ## Model and inference notes
 
 - **What it is:** a 20B diffusion transformer guided by a Qwen2.5-VL 7B vision-language encoder. Each reference reaches the model two ways: as a description through the encoder, and as pixels through the latent.
-- **Why the output size is inherited:** the encoder always scales references to about 1 megapixel at their own aspect, and the model lines up reference and output on one shared grid. If the output canvas differs in size, it can't copy detail across and re-synthesizes the subject instead, which looks plastic and CGI. The tool therefore scales image 1 once and uses those same pixels for both the encoder and the starting latent. `--latent empty` breaks that link; it's for deliberate size changes only.
+- **Why the output size is inherited:** the encoder always scales references to about 1 megapixel at their own aspect, and the model lines up reference and output on one shared grid. If the output canvas differs in size, it can't copy detail across and re-synthesizes the subject instead, which looks plastic and CGI. The tool therefore scales image 1 once and uses those same pixels for both the encoder and the starting latent. `--latent empty` breaks that link; use it only when the result needs a different frame or size than image 1.
 - **CFG 1 means the negative prompt does nothing.** The default model and both Lightning setups run at CFG 1. The negative only matters at CFG 2.5–4 (2509/2511 with `--no-lightning`); then add terms like `smooth skin, airbrushed, plastic, waxy, cgi, 3d render`.
 - **Don't add steps to a fast model "for quality."** Lightning and the AIO accelerator are distilled for their own step count at CFG 1. More steps or more CFG makes results *worse* (flatter light, weaker identity, smoother skin).
 - **Partial denoise** (`--denoise` below 1) needs the image latent; with an empty latent it renders a flat field, so the tool refuses that combination.
