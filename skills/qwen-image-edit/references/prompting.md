@@ -48,7 +48,18 @@ Identify the type first, then apply its pattern.
 
 ## Which image goes first
 
-The output takes image 1's frame, so **image 1 is the picture whose composition you keep**: the body, outfit, pose or scene. The images that only supply something (a face, an object, a style) come after it. To put the person from a portrait into another photo's body and outfit, pass that photo as image 1 and the portrait as image 2. **The image latent locks image 1's composition.** The prompt can't move the frame: if image 1 crops off the head, the result does too, whatever the prompt says. When the result needs a frame that no reference has (a head the body photo cuts off, a new scene combining several people), use `--latent empty` with an `--aspect` that fits the result (for example `2:3` for head-to-thigh), and describe the framing in the prompt: "The woman from image 2, shown from head to thighs, wearing the outfit from image 1 in the same pose."
+It depends on the latent, because the model follows image 1 most closely.
+
+- **Default (`--latent image`):** the output takes image 1's frame, so **image 1 is the picture whose composition you keep** (the scene, body, pose). Images that only supply something (an object, a garment, a style) come after it.
+- **`--latent empty`:** there is no frame to keep, so **image 1 is the person whose identity must survive** (the face photo). Outfit, pose and scene sources come after it.
+
+**The image latent locks image 1's composition.** The prompt can't move the frame: if image 1 crops off the head, the result does too, whatever the prompt says. When the result needs a frame that no reference has (a head the body photo cuts off, a new scene combining several people), use `--latent empty`.
+
+**Putting the person from a portrait into another photo's body and outfit** (tested): portrait as image 1, body photo as image 2, `--model 2511 --latent empty --aspect 2:3 --megapixels 2`, and the framing first in the prompt:
+
+> Full-length portrait from the top of her head to her thighs, with clear space above her head. The woman from image 1 with her long loose straight black hair and side-swept bangs, her face and warm brown skin as in image 1. She wears the outfit from image 2 (red cropped top with white logos, high-waisted gray leggings) in the same pose as image 2: one hand on her hip. Plain light gray background, soft daylight from the front-left.
+
+With the body photo as image 1 instead, the face and hair drift to a lookalike. At 1 megapixel the face is too small in a full-body frame to keep its identity; 2 megapixels fixes that, but may add faint streaks on large plain fabric. `aio` held identity worse than `2511` here.
 
 ## Text-to-image (no `--ref`)
 

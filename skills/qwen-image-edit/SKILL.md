@@ -35,7 +35,7 @@ python3 /home/workdir/grok-harness/skills/qwen-image-edit/scripts/qwen_image_edi
 | `--seed N` | random | Reported; reuse it to reproduce or tweak an image |
 | `--lora "file.safetensors:0.8"` | none | Extra LoRA; repeatable, applied after the skin LoRA |
 | `--skin-lora S` | 0.7 | Strength of the built-in skin-texture LoRA; `0` turns it off |
-| `--latent image\|empty` | `image` | `empty` uses `--aspect`/`--megapixels` even with references. Use it when the result needs a frame image 1 doesn't have (a size change, or a head the body photo crops off: the prompt can't move image 1's frame). Edits are less faithful (see notes) |
+| `--latent image\|empty` | `image` | `empty` uses `--aspect`/`--megapixels` even with references. Use it when the result needs a frame image 1 doesn't have (a size change, or a head the body photo crops off: the prompt can't move image 1's frame). Then image 1 should be the person's face photo; see "Which image goes first" in the prompting guide |
 | `--aspect A` / `--megapixels M` | `2:3` / 1.0 | Output shape and size for text-to-image or `--latent empty`: `1:1`, `2:3`, `3:2`, `3:4`, `4:3`, `9:16`, `16:9`, `21:9` |
 | `--denoise X` | 1.0 | Below 1 keeps more of image 1 (0.5–0.8 for a light touch). Needs a reference and the image latent |
 | `--steps`, `--cfg`, `--sampler`, `--scheduler`, `--shift` | per model | Only when the user asks |
